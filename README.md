@@ -29,4 +29,4 @@ Instale as dependências: npm install
 Inicie o servidor de desenvolvimento: npm run dev
 
 📄 Licença
-Este projeto é de código aberto e foi desenvolvido para fins acadêmicos e de impacto social para a comunidade de São Gotardo
+Este projeto é de código aberto e foi desenvolvido para fins acadêmicos e de impacto social.
