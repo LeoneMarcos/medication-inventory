@@ -1,4 +1,4 @@
-import type { Medication, MedicationStatus } from '../types';
+import type { Medication, MedicationCategory, MedicationFlags, MedicationStatus } from '../types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -9,6 +9,36 @@ function startOfDay(value: Date): Date {
 export function parseDateOnly(value: string): Date {
   const [year, month, day] = value.split('-').map(Number);
   return new Date(year, month - 1, day);
+}
+
+export function getMedicationFlags(medication: Medication, today = new Date()): MedicationFlags {
+  const currentDay = startOfDay(today);
+  const expiration = parseDateOnly(medication.expirationDate);
+  const daysUntilExpiration = Math.round((expiration.getTime() - currentDay.getTime()) / DAY_MS);
+
+  const isExpired = daysUntilExpiration < 0;
+  const isExpiringSoon = daysUntilExpiration >= 0 && daysUntilExpiration <= 30;
+  const isLowStock = medication.quantity <= medication.minimumStock;
+  const isHealthy = !isExpired && !isExpiringSoon && !isLowStock;
+
+  return {
+    isExpired,
+    isExpiringSoon,
+    isLowStock,
+    isHealthy,
+  };
+}
+
+export function getMedicationCategories(medication: Medication, today = new Date()): MedicationCategory[] {
+  const flags = getMedicationFlags(medication, today);
+  const categories: MedicationCategory[] = [];
+
+  if (flags.isExpired) categories.push('expired');
+  if (flags.isExpiringSoon) categories.push('expiring soon');
+  if (flags.isLowStock) categories.push('low stock');
+  if (flags.isHealthy) categories.push('healthy');
+
+  return categories;
 }
 
 export function getMedicationStatus(medication: Medication, today = new Date()): MedicationStatus {

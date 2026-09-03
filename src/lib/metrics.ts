@@ -1,7 +1,7 @@
-import { getMedicationStatus } from './medications';
-import type { Medication, MedicationStatus } from '../types';
+import { getMedicationFlags } from './medications';
+import type { Medication, MedicationCategory } from '../types';
 
-export type DashboardMetrics = Record<MedicationStatus, number> & { total: number };
+export type DashboardMetrics = Record<MedicationCategory, number> & { total: number };
 
 export function getDashboardMetrics(medications: Medication[], today = new Date()): DashboardMetrics {
   const metrics: DashboardMetrics = {
@@ -13,7 +13,12 @@ export function getDashboardMetrics(medications: Medication[], today = new Date(
   };
 
   medications.forEach((medication) => {
-    metrics[getMedicationStatus(medication, today)] += 1;
+    const flags = getMedicationFlags(medication, today);
+    if (flags.isHealthy) metrics.healthy += 1;
+    if (flags.isLowStock) metrics['low stock'] += 1;
+    if (flags.isExpiringSoon) metrics['expiring soon'] += 1;
+    if (flags.isExpired) metrics.expired += 1;
   });
+
   return metrics;
 }
