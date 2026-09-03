@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { addStock, removeStock } from '../lib/medications';
 import type { Medication } from '../types';
 
-const STORAGE_KEY = 'pharivo-inventory-data';
+const STORAGE_KEY = 'medication-inventory-data';
 
 export function useInventory() {
   const [medications, setMedications] = useState<Medication[]>(() => {

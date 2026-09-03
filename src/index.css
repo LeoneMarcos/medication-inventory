@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -66,4 +64,8 @@ input[aria-label='Search medications']:focus {
 
 .group:has(> input[aria-label='Search medications']:focus) > svg {
   color: rgb(71 85 105) !important;
+}
+
+header p {
+  letter-spacing: 0.14em !important;
 }
