@@ -9,7 +9,7 @@ import { MedicationForm } from './components/domain/MedicationForm';
 import type { Medication } from './types';
 
 function BrandMark({ className }: { className?: string }) {
-  return <img src="/medication-inventory-mark.png" alt="" aria-hidden="true" className={className} />;
+  return <img src="/medication-inventory-mark.webp" alt="" aria-hidden="true" className={className} />;
 }
 
 const Pill = BrandMark;

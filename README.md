@@ -1,6 +1,12 @@
-# Pharivo
+# Medication Inventory
 
-Pharivo is a responsive medication inventory management application built with React, TypeScript, Vite and Tailwind CSS.
+Medication Inventory is a responsive medication inventory management application built with React, TypeScript, Vite and Tailwind CSS.
+
+Live demo: [inventory.leonemarcos.com](https://inventory.leonemarcos.com)
+
+Watch the product walkthrough:
+
+https://github.com/user-attachments/assets/d154fc20-bda2-4df9-8d5f-1b5e6b24626c
 
 ## Features
 

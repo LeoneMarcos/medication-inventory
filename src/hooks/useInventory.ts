@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { addStock, removeStock } from '../lib/medications';
 import type { Medication } from '../types';
 
@@ -25,7 +24,7 @@ export function useInventory() {
   }, [medications]);
 
   const addMedication = (medication: Omit<Medication, 'id'>) => {
-    setMedications((current) => [...current, { ...medication, id: uuidv4() }]);
+    setMedications((current) => [...current, { ...medication, id: crypto.randomUUID() }]);
   };
 
   const updateMedication = (id: string, updates: Partial<Omit<Medication, 'id'>>) => {
