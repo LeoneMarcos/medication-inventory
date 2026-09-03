@@ -16,10 +16,10 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg active:scale-95 focus:ring-blue-500 font-bold',
-    secondary: 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 shadow-sm active:scale-95 focus:ring-slate-400 font-bold',
-    danger: 'bg-rose-500 text-white hover:bg-rose-600 shadow-md active:scale-95 focus:ring-rose-400',
-    ghost: 'text-slate-600 hover:bg-slate-100/80 active:scale-95 focus:ring-slate-300 font-bold',
+    primary: 'bg-blue-600/80 backdrop-blur-xl text-white border border-white/55 hover:bg-blue-600/90 hover:shadow-lg shadow-md shadow-blue-500/25 active:scale-95 focus:ring-blue-500 font-bold',
+    secondary: 'bg-white/28 backdrop-blur-xl text-slate-700 border border-white/70 hover:bg-white/50 hover:border-white/90 shadow-sm active:scale-95 focus:ring-slate-400 font-bold',
+    danger: 'bg-blue-400/25 backdrop-blur-xl text-blue-800 border border-white/65 hover:bg-blue-400/40 shadow-sm active:scale-95 focus:ring-blue-400',
+    ghost: 'bg-white/58 backdrop-blur-xl text-slate-800 border border-white/90 hover:bg-white/75 hover:border-white shadow-md shadow-slate-900/10 active:scale-95 focus:ring-slate-400 font-bold',
   };
 
   const sizes = {
@@ -31,7 +31,7 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer group',
+        'inline-flex items-center justify-center font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer group shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]',
         variants[variant],
         sizes[size],
         className

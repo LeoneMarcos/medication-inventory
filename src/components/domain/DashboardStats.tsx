@@ -1,73 +1,16 @@
+import { AlertCircle, AlertTriangle, CheckCircle2, Package, XCircle } from 'lucide-react';
+import { getDashboardMetrics } from '../../lib/metrics';
+import type { Medication } from '../../types';
 import { Card, CardContent } from '../ui/Card';
-import { AlertTriangle, Package, AlertCircle } from 'lucide-react';
-import type { Medicamento } from '../../types';
 
-interface DashboardStatsProps {
-  medicamentos: Medicamento[];
-}
-
-export function DashboardStats({ medicamentos }: DashboardStatsProps) {
-  const totalItens = medicamentos.length;
-  const estoqueBaixo = medicamentos.filter(m => m.quantidade <= m.quantidadeMinima).length;
-  
-  const today = new Date();
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(today.getDate() + 30);
-
-  const vencimentoProximo = medicamentos.filter(m => {
-    const validade = new Date(m.validade);
-    return validade <= thirtyDaysFromNow;
-  }).length;
-
-  return (
-    <div className="grid gap-6 md:grid-cols-3">
-      <Card className="relative overflow-hidden border-none group transition-all duration-300 hover:shadow-xl">
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
-          <Package className="h-28 w-28" />
-        </div>
-        <CardContent className="flex items-center p-8 space-x-6 relative z-10">
-          <div className="p-4 bg-brand-50 rounded-2xl text-brand-600 shadow-inner group-hover:bg-brand-100 transition-colors">
-            <Package className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Total em Catálogo</p>
-            <h4 className="text-4xl font-black text-slate-800 mt-1">{totalItens}</h4>
-          </div>
-        </CardContent>
-        <div className="h-1.5 w-full bg-brand-500/20 absolute bottom-0 left-0" />
-      </Card>
-
-      <Card className="relative overflow-hidden border-none group transition-all duration-300 hover:shadow-xl">
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
-          <AlertTriangle className="h-28 w-28" />
-        </div>
-        <CardContent className="flex items-center p-8 space-x-6 relative z-10">
-          <div className="p-4 bg-amber-50 rounded-2xl text-amber-600 shadow-inner group-hover:bg-amber-100 transition-colors">
-            <AlertTriangle className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Estoque Crítico</p>
-            <h4 className="text-4xl font-black text-slate-800 mt-1">{estoqueBaixo}</h4>
-          </div>
-        </CardContent>
-        <div className="h-1.5 w-full bg-amber-500/30 absolute bottom-0 left-0" />
-      </Card>
-
-      <Card className="relative overflow-hidden border-none group transition-all duration-300 hover:shadow-xl">
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 group-hover:scale-110 transition-all duration-500">
-          <AlertCircle className="h-28 w-28" />
-        </div>
-        <CardContent className="flex items-center p-8 space-x-6 relative z-10">
-          <div className="p-4 bg-rose-50 rounded-2xl text-rose-600 shadow-inner group-hover:bg-rose-100 transition-colors">
-             <AlertCircle className="h-8 w-8" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Vencimento em 30d</p>
-            <h4 className="text-4xl font-black text-slate-800 mt-1">{vencimentoProximo}</h4>
-          </div>
-        </CardContent>
-        <div className="h-1.5 w-full bg-rose-500/30 absolute bottom-0 left-0" />
-      </Card>
-    </div>
-  );
+export function DashboardStats({ medications }: { medications: Medication[] }) {
+  const metrics = getDashboardMetrics(medications);
+  const cards = [
+    { label: 'Total medications', value: metrics.total, icon: Package },
+    { label: 'Healthy', value: metrics.healthy, icon: CheckCircle2 },
+    { label: 'Low stock', value: metrics['low stock'], icon: AlertTriangle },
+    { label: 'Expiring 30d', value: metrics['expiring soon'], icon: AlertCircle },
+    { label: 'Expired', value: metrics.expired, icon: XCircle },
+  ];
+  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{cards.map(({ label, value, icon: Icon }, index) => <Card key={label} className="border-t-4 border-t-brand-500 bg-white/24 backdrop-blur-2xl hover:-translate-y-1 hover:shadow-[0_22px_45px_rgba(49,93,142,0.20)] transition-all duration-300 animate-rise" style={{ animationDelay: index * 60 + 'ms' }}><CardContent className="relative flex items-center p-4 xl:p-6 gap-3 xl:gap-4 overflow-hidden"><div className="relative p-2.5 xl:p-3 rounded-2xl bg-brand-500/85 text-white border border-white/55 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_6px_14px_rgba(14,165,233,0.18)]"><Icon className="h-5 w-5" strokeWidth={2.25} /></div><div className="relative min-w-0"><p className="whitespace-nowrap text-[9px] xl:text-[10px] font-bold text-slate-600 uppercase tracking-[0.1em] xl:tracking-[0.13em] leading-tight">{label}</p><h4 className="font-display text-3xl font-extrabold text-slate-900 mt-1">{value}</h4></div></CardContent></Card>)}</div>;
 }

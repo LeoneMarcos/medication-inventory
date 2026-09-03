@@ -1,9 +1,11 @@
-export interface Medicamento {
+export type MedicationStatus = 'healthy' | 'low stock' | 'expiring soon' | 'expired';
+
+export interface Medication {
   id: string;
-  nome: string;
-  lote: string;
-  quantidade: number;
-  validade: string; // ISO date string YYYY-MM-DD
-  fabricante: string;
-  quantidadeMinima: number;
+  name: string;
+  batch: string;
+  quantity: number;
+  expirationDate: string;
+  manufacturer: string;
+  minimumStock: number;
 }

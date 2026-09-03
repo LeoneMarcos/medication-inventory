@@ -23,6 +23,10 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        display: ['Manrope', 'Inter', 'sans-serif'],
+      },
+      maxWidth: {
+        '7xl': '92rem',
       },
       boxShadow: {
         'premium': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
