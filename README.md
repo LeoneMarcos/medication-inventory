@@ -71,6 +71,7 @@ The animated preview shows a short excerpt of the canonical showcase. Open the f
 - **Status filters** — Narrow the inventory to needs attention, healthy, low stock, expiring soon, or expired records without duplicating the dashboard summary.
 - **Batches & expiration control** — Strict date validation preventing invalid calendar dates and retaining proper records.
 - **Safe stock adjustments** — Add or remove units with a live post-adjustment balance preview and bounds checks preventing negative stock.
+- **Data portability** — Export inventory to spreadsheet-safe CSV, download versioned JSON backups, and restore validated backups only after explicit confirmation.
 - **Faceted search & sorting** — Search by medication name, active ingredient, batch number, or manufacturer, with sorting by Name, Expiration, or Quantity.
 - **Light & dark themes** — Built-in theme switcher with flash-free initial hydration and system color scheme detection.
 - **Accessible & compliant** — Full keyboard trap in modals, ARIA labels, live status regions, and `prefers-reduced-motion` respect.
@@ -90,6 +91,7 @@ src/
 │   ├── useInventory.ts   # Inventory state management and safe persistence boundary
 │   └── useTheme.ts       # Light/Dark mode state and DOM synchronization
 ├── lib/
+│   ├── dataPortability.ts # CSV export and versioned JSON backup/restore validation
 │   ├── inventory.ts      # Filtering and search predicates
 │   ├── medications.ts    # Domain logic (status calculation, stock math, date parsers)
 │   ├── metrics.ts        # Dashboard statistics calculation
@@ -105,6 +107,7 @@ src/
 
 - **Storage mechanism:** Persistent local storage under key `medication-inventory-data`.
 - **Sanitization:** `parseStoredMedications` verifies every field on startup, rejecting corrupted records, invalid types, and impossible calendar dates.
+- **Backup validation:** JSON restore is versioned and atomic; the full backup is rejected when a record is invalid, medication IDs are duplicated, or stock values exceed the supported safe-integer boundary.
 - **Atomic persistence & Error handling:** State mutations are atomic—in-memory inventory is only committed if localStorage persistence succeeds. If browser storage fails (e.g. `QuotaExceededError` or private browsing restrictions), operations display proportional alert notices, preserve open dialogs and entered data for retry, and never falsely claim changes were saved.
 - **Representation limit:** Stock adjustments enforce JavaScript's safe integer boundary (`Number.MAX_SAFE_INTEGER`, 9,007,199,254,740,991 units) to prevent numeric overflow while strictly preserving user data.
 
