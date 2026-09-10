@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   CircleCheck,
+  FileJson,
+  FileSpreadsheet,
   HardDrive,
   Moon,
   Plus,
   Sun,
+  Upload,
   X,
 } from "lucide-react";
 import { useTheme } from "./hooks/useTheme";
@@ -18,6 +21,12 @@ import {
   type InventoryFilter,
 } from "./components/domain/InventoryTable";
 import { MedicationForm } from "./components/domain/MedicationForm";
+import {
+  downloadFile,
+  exportBackupJson,
+  exportInventoryCsv,
+  parseBackupJson,
+} from "./lib/dataPortability";
 import type { Medication } from "./types";
 
 interface Notice {
@@ -34,6 +43,7 @@ function App() {
     deleteMedication,
     addQuantity,
     removeQuantity,
+    replaceMedications,
   } = useInventory();
 
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -44,7 +54,11 @@ function App() {
   const [deletingMedicationId, setDeletingMedicationId] = useState<
     string | undefined
   >();
+  const [pendingRestoreMedications, setPendingRestoreMedications] = useState<
+    Medication[] | null
+  >(null);
   const [filter, setFilter] = useState<InventoryFilter>("all");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!notice) return;
@@ -151,6 +165,95 @@ function App() {
     return success;
   };
 
+  const handleExportCsv = () => {
+    const csv = exportInventoryCsv(medications);
+    const dateStr = new Date().toISOString().split("T")[0];
+    downloadFile(`medication-inventory-${dateStr}.csv`, csv, "text/csv");
+    setNotice({
+      message: "Inventory exported to CSV.",
+      type: "success",
+    });
+  };
+
+  const handleDownloadBackup = () => {
+    const json = exportBackupJson(medications);
+    const dateStr = new Date().toISOString().split("T")[0];
+    downloadFile(
+      `medication-inventory-backup-${dateStr}.json`,
+      json,
+      "application/json",
+    );
+    setNotice({
+      message: "Backup file downloaded.",
+      type: "success",
+    });
+  };
+
+  const handleTriggerRestore = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content !== "string") {
+        setNotice({
+          message: "Failed to read backup file.",
+          type: "error",
+        });
+        return;
+      }
+
+      const result = parseBackupJson(content);
+      if (!result.success) {
+        setNotice({
+          message: result.error,
+          type: "error",
+        });
+      } else {
+        setPendingRestoreMedications(result.medications);
+      }
+    };
+    reader.onerror = () => {
+      setNotice({
+        message: "Failed to read backup file.",
+        type: "error",
+      });
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const confirmRestore = () => {
+    if (!pendingRestoreMedications) return;
+    const count = pendingRestoreMedications.length;
+    const success = replaceMedications(pendingRestoreMedications);
+    if (success) {
+      setNotice({
+        message: `Inventory restored successfully (${count} ${count === 1 ? "medication" : "medications"}).`,
+        type: "success",
+      });
+      setPendingRestoreMedications(null);
+    } else {
+      setNotice({
+        message:
+          "Storage failure: could not restore inventory to browser storage.",
+        type: "error",
+      });
+    }
+  };
+
+  const cancelRestore = () => {
+    setPendingRestoreMedications(null);
+  };
+
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">
@@ -237,10 +340,44 @@ function App() {
         </section>
 
         <footer className="app-footer">
-          <span>
+          <span className="app-footer-notice">
             <HardDrive size={14} aria-hidden="true" /> Stored on this device, in
             this browser.
           </span>
+          <div className="app-footer-actions">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={FileSpreadsheet}
+              onClick={handleExportCsv}
+            >
+              Export CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={FileJson}
+              onClick={handleDownloadBackup}
+            >
+              Download backup
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={Upload}
+              onClick={handleTriggerRestore}
+            >
+              Restore backup
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="sr-only"
+              onChange={handleFileChange}
+              aria-label="Upload backup JSON file"
+            />
+          </div>
         </footer>
       </main>
 
@@ -309,6 +446,37 @@ function App() {
           </Button>
           <Button variant="danger" onClick={confirmDelete}>
             Delete medication
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(pendingRestoreMedications)}
+        onClose={cancelRestore}
+        title="Restore backup?"
+        description="This action will replace your current local inventory."
+      >
+        <p className="delete-description">
+          Restoring{" "}
+          <strong>
+            {pendingRestoreMedications?.length}{" "}
+            {pendingRestoreMedications?.length === 1
+              ? "medication"
+              : "medications"}
+          </strong>{" "}
+          will replace all{" "}
+          <strong>
+            {medications.length}{" "}
+            {medications.length === 1 ? "medication" : "medications"}
+          </strong>{" "}
+          currently stored in this browser. This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3 mt-4">
+          <Button variant="secondary" onClick={cancelRestore}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={confirmRestore}>
+            Restore inventory
           </Button>
         </div>
       </Modal>
