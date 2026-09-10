@@ -60,7 +60,7 @@ Watch the short product walk-through demonstrating initial stock review, adding 
 
 The short showcase video covers the main inventory flow and interface.
 
-[Watch the current showcase video](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
+[![Showcase Video](https://img.shields.io/badge/Showcase-Video-17685b?style=flat-square&logo=github&logoColor=white)](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
 
 ---
 
