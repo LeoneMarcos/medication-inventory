@@ -4,6 +4,7 @@ import {
   exportInventoryCsv,
   parseBackupJson,
 } from "./dataPortability";
+import { MAX_STOCK_LIMIT } from "./medications";
 import type { Medication } from "../types";
 
 const sampleMedication1: Medication = {
@@ -171,6 +172,24 @@ describe("parseBackupJson", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error).toContain("invalid or corrupted");
+    }
+  });
+
+  it("rejects stock values above the supported safe-integer limit", () => {
+    for (const field of ["quantity", "minimumStock"] as const) {
+      const json = JSON.stringify({
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString(),
+        medications: [
+          { ...sampleMedication1, [field]: MAX_STOCK_LIMIT + 1 },
+        ],
+      });
+
+      const result = parseBackupJson(json);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain("safe-integer limit");
+      }
     }
   });
 
