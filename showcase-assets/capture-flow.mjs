@@ -24,7 +24,8 @@ const field = (page, label) =>
 const waitForRowText = async (page, medicationName, text) => {
   const row = page.locator('tbody tr').filter({ hasText: medicationName });
   await row.waitFor();
-  if (!(await row.innerText()).includes(text)) throw new Error(`${medicationName} did not show ${text}`);
+  const normalizedRow = (await row.innerText()).replace(/\s+/g, ' ');
+  if (!normalizedRow.includes(text)) throw new Error(`${medicationName} did not show ${text}`);
 };
 
 const medications = [
@@ -45,7 +46,7 @@ async function addMedication(page, [name, batch, quantity, minimumStock, expirat
   await field(page, 'Expiration date').fill(expiration);
   await wait(350);
   await page.getByRole('button', { name: 'Save medication', exact: true }).click();
-  await page.getByRole('heading', { name: 'Dashboard', exact: true }).waitFor();
+  await page.locator('tbody tr').filter({ hasText: name }).waitFor();
   await wait(900);
 }
 
@@ -79,13 +80,13 @@ try {
   await wait(500);
   for (const medication of medications) await addMedication(page, medication);
 
-  const stats = await page.locator('section').first().innerText();
+  const stats = await page.getByRole('group', { name: 'Inventory metrics filter' }).innerText();
   const normalizedStats = stats.replace(/\s+/g, ' ').toLowerCase();
   for (const expected of [
     'total medications 4',
     'healthy 1',
     'low stock 1',
-    'expiring 30d 1',
+    'expiring soon 1',
     'expired 1',
   ]) {
     if (!normalizedStats.includes(expected)) throw new Error(`Unexpected dashboard metric: ${expected}`);
