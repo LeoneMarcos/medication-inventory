@@ -16,7 +16,7 @@
     "showcase:convert": "node showcase-assets/convert-showcase.mjs",
     "showcase:prepare": "npm run showcase:capture && npm run showcase:convert",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"vite.config.ts\" \"playwright.config.ts\" \"eslint.config.js\" \"package.json\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"vite.config.ts\" \"playwright.config.ts\" \"eslint.config.js\" \"package.json\"",
