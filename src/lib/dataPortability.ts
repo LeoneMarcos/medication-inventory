@@ -150,7 +150,8 @@ export function parseBackupJson(rawJson: string): BackupParseResult {
   if (!allStockValuesWithinLimit) {
     return {
       success: false,
-      error: "Invalid backup file: stock values exceed the supported safe-integer limit.",
+      error:
+        "Invalid backup file: stock values exceed the supported safe-integer limit.",
     };
   }
 
