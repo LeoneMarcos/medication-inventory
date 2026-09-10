@@ -1,16 +1,47 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../src/App";
+import { STORAGE_KEY } from "../src/lib/storage";
+import type { Medication } from "../src/types";
+
+const initialMedication: Medication = {
+  id: "med-existing-1",
+  name: "Paracetamol",
+  batch: "BATCH-OLD",
+  manufacturer: "Pharma A",
+  quantity: 20,
+  minimumStock: 5,
+  expirationDate: "2027-10-10",
+};
+
+const restoredMedication: Medication = {
+  id: "med-restored-1",
+  name: "Aspirin",
+  batch: "BATCH-NEW",
+  manufacturer: "Pharma B",
+  quantity: 100,
+  minimumStock: 15,
+  expirationDate: "2028-05-15",
+};
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify([initialMedication]));
 });
 
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  vi.restoreAllMocks();
 });
 
 describe("Medication Inventory app shell", () => {
@@ -29,5 +60,148 @@ describe("Medication Inventory app shell", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog", { name: "Add medication" })).toBeNull();
+  });
+});
+
+describe("Data Portability (Export, Backup & Restore)", () => {
+  it("renders export CSV and download backup buttons and triggers feedback notice", () => {
+    window.URL.createObjectURL = vi.fn(() => "blob:fake-url");
+    window.URL.revokeObjectURL = vi.fn();
+
+    render(<App />);
+
+    const exportCsvButton = screen.getByRole("button", { name: "Export CSV" });
+    const downloadBackupButton = screen.getByRole("button", {
+      name: "Download backup",
+    });
+
+    fireEvent.click(exportCsvButton);
+    expect(screen.getByText("Inventory exported to CSV.")).toBeTruthy();
+
+    fireEvent.click(downloadBackupButton);
+    expect(screen.getByText("Backup file downloaded.")).toBeTruthy();
+  });
+
+  it("shows an error notification when an invalid backup file is selected for restore", async () => {
+    render(<App />);
+
+    const fileInput = screen.getByLabelText(
+      "Upload backup JSON file",
+    ) as HTMLInputElement;
+
+    const invalidFile = new File(
+      [JSON.stringify({ schemaVersion: 1, medications: [{ invalid: true }] })],
+      "invalid-backup.json",
+      { type: "application/json" },
+    );
+
+    fireEvent.change(fileInput, { target: { files: [invalidFile] } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Invalid backup file: one or more medication records are invalid or corrupted.",
+        ),
+      ).toBeTruthy();
+    });
+
+    // Ensure state was untouched
+    expect(screen.getByText("Paracetamol")).toBeTruthy();
+  });
+
+  it("shows confirmation modal when valid backup file is uploaded and cancels without modifying inventory", async () => {
+    render(<App />);
+
+    const fileInput = screen.getByLabelText(
+      "Upload backup JSON file",
+    ) as HTMLInputElement;
+
+    const validBackupFile = new File(
+      [
+        JSON.stringify({
+          schemaVersion: 1,
+          exportedAt: new Date().toISOString(),
+          medications: [restoredMedication],
+        }),
+      ],
+      "backup.json",
+      { type: "application/json" },
+    );
+
+    fireEvent.change(fileInput, { target: { files: [validBackupFile] } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("dialog", { name: "Restore backup?" }),
+      ).toBeTruthy();
+    });
+
+    // Verify confirmation message contains record count and replacement notice
+    const dialog = screen.getByRole("dialog", { name: "Restore backup?" });
+    expect(within(dialog).getAllByText("1 medication").length).toBeGreaterThan(
+      0,
+    );
+
+    // Click Cancel
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    // Modal should close and original medication remain
+    expect(
+      screen.queryByRole("dialog", { name: "Restore backup?" }),
+    ).toBeNull();
+    expect(screen.getByText("Paracetamol")).toBeTruthy();
+    expect(screen.queryByText("Aspirin")).toBeNull();
+  });
+
+  it("replaces inventory when backup restore is confirmed", async () => {
+    render(<App />);
+
+    const fileInput = screen.getByLabelText(
+      "Upload backup JSON file",
+    ) as HTMLInputElement;
+
+    const validBackupFile = new File(
+      [
+        JSON.stringify({
+          schemaVersion: 1,
+          exportedAt: new Date().toISOString(),
+          medications: [restoredMedication],
+        }),
+      ],
+      "backup.json",
+      { type: "application/json" },
+    );
+
+    fireEvent.change(fileInput, { target: { files: [validBackupFile] } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("dialog", { name: "Restore backup?" }),
+      ).toBeTruthy();
+    });
+
+    const dialog = screen.getByRole("dialog", { name: "Restore backup?" });
+
+    // Click Restore inventory
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Restore inventory" }),
+    );
+
+    // Modal closes and new medication is shown
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Restore backup?" }),
+      ).toBeNull();
+      expect(screen.getByText("Aspirin")).toBeTruthy();
+      expect(screen.queryByText("Paracetamol")).toBeNull();
+      expect(
+        screen.getByText("Inventory restored successfully (1 medication)."),
+      ).toBeTruthy();
+    });
+
+    // Verify localStorage was updated
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(
+      JSON.stringify([restoredMedication]),
+    );
   });
 });

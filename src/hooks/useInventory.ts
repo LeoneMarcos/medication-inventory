@@ -79,6 +79,15 @@ export function useInventory() {
     return true;
   };
 
+  const replaceMedications = (nextMedications: Medication[]): boolean => {
+    const result = saveStoredMedications(nextMedications);
+    if (!result.success) {
+      return false;
+    }
+    setMedications(nextMedications);
+    return true;
+  };
+
   return {
     medications,
     addMedication,
@@ -86,5 +95,6 @@ export function useInventory() {
     deleteMedication,
     addQuantity,
     removeQuantity,
+    replaceMedications,
   };
 }
