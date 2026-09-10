@@ -153,6 +153,75 @@ describe("Data Portability (Export, Backup & Restore)", () => {
     expect(screen.queryByText("Aspirin")).toBeNull();
   });
 
+  it("keeps restore confirmation open after persistence failure and allows retry", async () => {
+    render(<App />);
+
+    const fileInput = screen.getByLabelText(
+      "Upload backup JSON file",
+    ) as HTMLInputElement;
+    const validBackupFile = new File(
+      [
+        JSON.stringify({
+          schemaVersion: 1,
+          exportedAt: new Date().toISOString(),
+          medications: [restoredMedication],
+        }),
+      ],
+      "backup.json",
+      { type: "application/json" },
+    );
+
+    fireEvent.change(fileInput, { target: { files: [validBackupFile] } });
+    await waitFor(() => {
+      expect(
+        screen.getByRole("dialog", { name: "Restore backup?" }),
+      ).toBeTruthy();
+    });
+
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(() => {
+        const error = new Error("quota exceeded");
+        error.name = "QuotaExceededError";
+        throw error;
+      });
+
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: "Restore backup?" })).getByRole(
+        "button",
+        { name: "Restore inventory" },
+      ),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Storage failure: could not restore inventory to browser storage.",
+        ),
+      ).toBeTruthy();
+    });
+    expect(screen.getByRole("dialog", { name: "Restore backup?" })).toBeTruthy();
+    expect(screen.getByText("Paracetamol")).toBeTruthy();
+    expect(screen.queryByText("Aspirin")).toBeNull();
+
+    setItemSpy.mockRestore();
+    fireEvent.click(
+      within(screen.getByRole("dialog", { name: "Restore backup?" })).getByRole(
+        "button",
+        { name: "Restore inventory" },
+      ),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Restore backup?" }),
+      ).toBeNull();
+      expect(screen.getByText("Aspirin")).toBeTruthy();
+      expect(screen.queryByText("Paracetamol")).toBeNull();
+    });
+  });
+
   it("replaces inventory when backup restore is confirmed", async () => {
     render(<App />);
 
