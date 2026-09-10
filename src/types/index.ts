@@ -1,4 +1,5 @@
-export type MedicationStatus = 'healthy' | 'low stock' | 'expiring soon' | 'expired';
+export type MedicationStatus =
+  "healthy" | "low stock" | "expiring soon" | "expired";
 
 export interface MedicationFlags {
   isExpired: boolean;

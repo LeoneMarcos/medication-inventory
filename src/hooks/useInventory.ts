@@ -1,18 +1,22 @@
-import { useState } from 'react';
-import { addStock, removeStock } from '../lib/medications';
-import { parseStoredMedications, saveStoredMedications, STORAGE_KEY } from '../lib/storage';
-import type { Medication } from '../types';
+import { useState } from "react";
+import { addStock, removeStock } from "../lib/medications";
+import {
+  parseStoredMedications,
+  saveStoredMedications,
+  STORAGE_KEY,
+} from "../lib/storage";
+import type { Medication } from "../types";
 
 export function useInventory() {
   const [medications, setMedications] = useState<Medication[]>(() => {
     try {
       return parseStoredMedications(localStorage.getItem(STORAGE_KEY));
     } catch (error) {
-      console.error('Unable to load inventory:', error);
+      console.error("Unable to load inventory:", error);
       return [];
     }
   });
-  const addMedication = (medication: Omit<Medication, 'id'>): boolean => {
+  const addMedication = (medication: Omit<Medication, "id">): boolean => {
     const next = [...medications, { ...medication, id: crypto.randomUUID() }];
     const result = saveStoredMedications(next);
     if (!result.success) {
@@ -22,7 +26,10 @@ export function useInventory() {
     return true;
   };
 
-  const updateMedication = (id: string, updates: Partial<Omit<Medication, 'id'>>): boolean => {
+  const updateMedication = (
+    id: string,
+    updates: Partial<Omit<Medication, "id">>,
+  ): boolean => {
     const next = medications.map((medication) =>
       medication.id === id ? { ...medication, ...updates } : medication,
     );
@@ -46,7 +53,9 @@ export function useInventory() {
 
   const addQuantity = (id: string, amount: number): boolean => {
     const next = medications.map((medication) =>
-      medication.id === id ? { ...medication, quantity: addStock(medication.quantity, amount) } : medication,
+      medication.id === id
+        ? { ...medication, quantity: addStock(medication.quantity, amount) }
+        : medication,
     );
     const result = saveStoredMedications(next);
     if (!result.success) {
@@ -58,7 +67,9 @@ export function useInventory() {
 
   const removeQuantity = (id: string, amount: number): boolean => {
     const next = medications.map((medication) =>
-      medication.id === id ? { ...medication, quantity: removeStock(medication.quantity, amount) } : medication,
+      medication.id === id
+        ? { ...medication, quantity: removeStock(medication.quantity, amount) }
+        : medication,
     );
     const result = saveStoredMedications(next);
     if (!result.success) {

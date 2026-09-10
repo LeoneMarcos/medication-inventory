@@ -45,7 +45,7 @@ async function runNegativeQA() {
   await page.evaluate(() => {
     window.__mockFailStorage = false;
     const origSetItem = Storage.prototype.setItem;
-    Storage.prototype.setItem = function (key, val) {
+    Storage.prototype.setItem = function (key, _val) {
       if (window.__mockFailStorage && key === 'medication-inventory-data') {
         const err = new Error('Quota exceeded');
         err.name = 'QuotaExceededError';
