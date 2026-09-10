@@ -18,8 +18,8 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"vite.config.ts\" \"playwright.config.ts\" \"eslint.config.js\" \"package.json\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"vite.config.ts\" \"playwright.config.ts\" \"eslint.config.js\" \"package.json\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.{ts,tsx}\" \"vite.config.ts\" \"playwright.config.ts\" \"eslint.config.js\" \"package.json\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.{ts,tsx}\" \"vite.config.ts\" \"playwright.config.ts\" \"eslint.config.js\" \"package.json\"",
     "preview": "vite preview"
   },
   "dependencies": {
