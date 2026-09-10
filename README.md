@@ -56,9 +56,9 @@ It gives clinic staff, pharmacy supervisors, and small healthcare teams instant 
 
 Watch the short product walk-through demonstrating initial stock review, adding records, search, status filtering, stock adjustments, and theme switching:
 
-[![Watch Medication Inventory Showcase Video](./showcase-assets/screenshots/hero-desktop.png)](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
+[![Medication Inventory animated showcase preview](./showcase-assets/showcase-preview.gif)](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
 
-The short showcase video covers the main inventory flow and interface.
+The animated preview shows a short excerpt of the canonical showcase. Open the full video below for the complete flow.
 
 [![Showcase Video](https://img.shields.io/badge/Showcase-Video-17685b?style=flat-square&logo=github&logoColor=white)](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
 
@@ -169,7 +169,7 @@ npm run lint
 npm run build
 ```
 
-The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical video and hero screenshot when product/showcase inputs change, and can also be run manually; those stable media paths are reused by the project README, profile, and portfolio.
+The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical video, hero screenshot, and short README GIF preview when product/showcase inputs change, and can also be run manually; those stable media paths are reused by the project README, profile, and portfolio.
 
 ### Negative QA Scripts
 
