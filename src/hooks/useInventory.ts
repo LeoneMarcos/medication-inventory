@@ -1,53 +1,79 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { addStock, removeStock } from '../lib/medications';
+import { parseStoredMedications, saveStoredMedications, STORAGE_KEY } from '../lib/storage';
 import type { Medication } from '../types';
-
-const STORAGE_KEY = 'medication-inventory-data';
 
 export function useInventory() {
   const [medications, setMedications] = useState<Medication[]>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      return parseStoredMedications(localStorage.getItem(STORAGE_KEY));
     } catch (error) {
       console.error('Unable to load inventory:', error);
       return [];
     }
   });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(medications));
-    } catch (error) {
-      console.error('Unable to save inventory:', error);
+  const addMedication = (medication: Omit<Medication, 'id'>): boolean => {
+    const next = [...medications, { ...medication, id: crypto.randomUUID() }];
+    const result = saveStoredMedications(next);
+    if (!result.success) {
+      return false;
     }
-  }, [medications]);
-
-  const addMedication = (medication: Omit<Medication, 'id'>) => {
-    setMedications((current) => [...current, { ...medication, id: crypto.randomUUID() }]);
+    setMedications(next);
+    return true;
   };
 
-  const updateMedication = (id: string, updates: Partial<Omit<Medication, 'id'>>) => {
-    setMedications((current) => current.map((medication) =>
+  const updateMedication = (id: string, updates: Partial<Omit<Medication, 'id'>>): boolean => {
+    const next = medications.map((medication) =>
       medication.id === id ? { ...medication, ...updates } : medication,
-    ));
+    );
+    const result = saveStoredMedications(next);
+    if (!result.success) {
+      return false;
+    }
+    setMedications(next);
+    return true;
   };
 
-  const deleteMedication = (id: string) => {
-    setMedications((current) => current.filter((medication) => medication.id !== id));
+  const deleteMedication = (id: string): boolean => {
+    const next = medications.filter((medication) => medication.id !== id);
+    const result = saveStoredMedications(next);
+    if (!result.success) {
+      return false;
+    }
+    setMedications(next);
+    return true;
   };
 
-  const addQuantity = (id: string, amount: number) => {
-    setMedications((current) => current.map((medication) =>
+  const addQuantity = (id: string, amount: number): boolean => {
+    const next = medications.map((medication) =>
       medication.id === id ? { ...medication, quantity: addStock(medication.quantity, amount) } : medication,
-    ));
+    );
+    const result = saveStoredMedications(next);
+    if (!result.success) {
+      return false;
+    }
+    setMedications(next);
+    return true;
   };
 
-  const removeQuantity = (id: string, amount: number) => {
-    setMedications((current) => current.map((medication) =>
+  const removeQuantity = (id: string, amount: number): boolean => {
+    const next = medications.map((medication) =>
       medication.id === id ? { ...medication, quantity: removeStock(medication.quantity, amount) } : medication,
-    ));
+    );
+    const result = saveStoredMedications(next);
+    if (!result.success) {
+      return false;
+    }
+    setMedications(next);
+    return true;
   };
 
-  return { medications, addMedication, updateMedication, deleteMedication, addQuantity, removeQuantity };
+  return {
+    medications,
+    addMedication,
+    updateMedication,
+    deleteMedication,
+    addQuantity,
+    removeQuantity,
+  };
 }

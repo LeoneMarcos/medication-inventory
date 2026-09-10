@@ -1,0 +1,17 @@
+# Medication Inventory
+
+> Medication Inventory is a client-only workspace for tracking medication stock, batches, expiration dates, and inventory movements.
+
+## Site
+
+- [Live application](https://inventory.leonemarcos.com/): Public portfolio demo.
+- [Repository](https://github.com/LeoneMarcos/medication-inventory): Source code, documentation, tests, and deployment configuration.
+- [Showcase video](https://github.com/user-attachments/assets/d154fc20-bda2-4df9-8d5f-1b5e6b24626c): Product walkthrough.
+
+## Technology
+
+- [React](https://react.dev/): UI component library.
+- [TypeScript](https://www.typescriptlang.org/): Typed application source.
+- [Vite](https://vite.dev/): Development server and production build tool.
+- [Vitest](https://vitest.dev/): Unit test runner.
+- [Cloudflare Pages](https://pages.cloudflare.com/): Static hosting.

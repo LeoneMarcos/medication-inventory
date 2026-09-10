@@ -1,16 +1,44 @@
-import { AlertCircle, AlertTriangle, CheckCircle2, Package, XCircle } from 'lucide-react';
+import { AlertTriangle, CircleCheck, Clock3, Package, CircleX } from 'lucide-react';
 import { getDashboardMetrics } from '../../lib/metrics';
-import type { Medication } from '../../types';
-import { Card, CardContent } from '../ui/Card';
+import type { Medication, MedicationStatus } from '../../types';
 
-export function DashboardStats({ medications }: { medications: Medication[] }) {
+export interface DashboardStatsProps {
+  medications: Medication[];
+  activeFilter?: MedicationStatus | 'all' | 'attention';
+  onFilter?: (filter: MedicationStatus | 'all') => void;
+}
+
+export function DashboardStats({ medications, activeFilter = 'all', onFilter }: DashboardStatsProps) {
   const metrics = getDashboardMetrics(medications);
   const cards = [
-    { label: 'Total medications', value: metrics.total, icon: Package },
-    { label: 'Healthy', value: metrics.healthy, icon: CheckCircle2 },
-    { label: 'Low stock', value: metrics['low stock'], icon: AlertTriangle },
-    { label: 'Expiring 30d', value: metrics['expiring soon'], icon: AlertCircle },
-    { label: 'Expired', value: metrics.expired, icon: XCircle },
+    { label: 'Total medications', value: metrics.total, icon: Package, filter: 'all' as const, tone: 'total', hint: 'All registered batches' },
+    { label: 'Healthy', value: metrics.healthy, icon: CircleCheck, filter: 'healthy' as const, tone: 'healthy', hint: 'Stock and expiry in range' },
+    { label: 'Low stock', value: metrics['low stock'], icon: AlertTriangle, filter: 'low stock' as const, tone: 'low', hint: 'At or below minimum' },
+    { label: 'Expiring soon', value: metrics['expiring soon'], icon: Clock3, filter: 'expiring soon' as const, tone: 'expiring', hint: 'Within 30 days' },
+    { label: 'Expired', value: metrics.expired, icon: CircleX, filter: 'expired' as const, tone: 'expired', hint: 'Past expiration date' },
   ];
-  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{cards.map(({ label, value, icon: Icon }, index) => <Card key={label} className="border-t-4 border-t-brand-500 bg-white/24 backdrop-blur-2xl hover:-translate-y-1 hover:shadow-[0_22px_45px_rgba(49,93,142,0.20)] transition-all duration-300 animate-rise" style={{ animationDelay: index * 60 + 'ms' }}><CardContent className="relative flex items-center p-4 xl:p-6 gap-3 xl:gap-4 overflow-hidden"><div className="relative p-2.5 xl:p-3 rounded-2xl bg-brand-500/85 text-white border border-white/55 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_6px_14px_rgba(14,165,233,0.18)]"><Icon className="h-5 w-5" strokeWidth={2.25} /></div><div className="relative min-w-0"><p className="whitespace-nowrap text-[9px] xl:text-[10px] font-bold text-slate-600 uppercase tracking-[0.1em] xl:tracking-[0.13em] leading-tight">{label}</p><h4 className="font-display text-3xl font-extrabold text-slate-900 mt-1">{value}</h4></div></CardContent></Card>)}</div>;
+
+  return (
+    <div className="stats-grid" role="group" aria-label="Inventory metrics filter">
+      {cards.map(({ label, value, icon: Icon, filter, tone, hint }) => (
+        <button
+          type="button"
+          key={label}
+          className={`stat-card stat-${tone}`}
+          aria-pressed={activeFilter === filter}
+          title={`Filter inventory by ${label.toLowerCase()}`}
+          onClick={() => onFilter?.(filter)}
+        >
+          <span className="stat-label">
+            <span className="stat-icon">
+              <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+            </span>
+            {label}
+          </span>
+          <span className="stat-value">{value.toLocaleString('en-US')}</span>
+          <span className="stat-hint">{hint}</span>
+        </button>
+      ))}
+    </div>
+  );
 }

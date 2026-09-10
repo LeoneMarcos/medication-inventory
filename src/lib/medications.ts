@@ -1,4 +1,9 @@
 import type { Medication, MedicationCategory, MedicationFlags, MedicationStatus } from '../types';
+import { isValidDateOnly } from './storage';
+
+export { isValidDateOnly };
+
+export const MAX_STOCK_LIMIT = Number.MAX_SAFE_INTEGER;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -9,6 +14,25 @@ function startOfDay(value: Date): Date {
 export function parseDateOnly(value: string): Date {
   const [year, month, day] = value.split('-').map(Number);
   return new Date(year, month - 1, day);
+}
+
+export function parseDateInputToIso(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // ISO format: YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return isValidDateOnly(trimmed) ? trimmed : null;
+  }
+
+  // MM/DD/YYYY format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+    const [month, day, year] = trimmed.split('/');
+    const iso = `${year}-${month}-${day}`;
+    return isValidDateOnly(iso) ? iso : null;
+  }
+
+  return null;
 }
 
 export function getMedicationFlags(medication: Medication, today = new Date()): MedicationFlags {
@@ -54,6 +78,9 @@ export function getMedicationStatus(medication: Medication, today = new Date()):
 
 export function addStock(currentQuantity: number, amount: number): number {
   validateAmount(amount);
+  if (amount > MAX_STOCK_LIMIT - currentQuantity) {
+    throw new Error(`Stock limit exceeded: total quantity cannot exceed ${MAX_STOCK_LIMIT.toLocaleString('en-US')} units.`);
+  }
   return currentQuantity + amount;
 }
 
