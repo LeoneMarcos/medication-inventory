@@ -171,6 +171,9 @@ npm run lint
 # Check formatting
 npm run format:check
 
+# Install the Chromium browser required by Playwright (once per environment)
+npx playwright install chromium
+
 # Run Playwright end-to-end tests
 npm run test:e2e
 

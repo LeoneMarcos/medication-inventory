@@ -33,7 +33,7 @@ The project must provide a responsive inventory dashboard with deterministic med
 
 ## 3. Runtime and packages
 
-Node.js 22.x is the CI runtime; npm and the committed `package-lock.json` are the only package workflow. Do not hand-edit the lockfile or introduce a second toolchain.
+GitHub Actions pins Node.js 22.x as the CI runtime. The npm manifest and lockfile do not currently declare or enforce a project-level Node.js engine. npm and the committed `package-lock.json` are the only package workflow; do not hand-edit the lockfile or introduce a second toolchain.
 
 ## 4. Frontend architecture
 
@@ -49,7 +49,7 @@ Browser `localStorage` is the only persistence boundary. Stored JSON is untruste
 
 ## 7. Testing and quality
 
-Required local gates are `npm run format:check`, `npm run lint`, `npm run typecheck` (`tsc -b`), `npm test`, `npm run build`, and `npm run test:e2e`. The build includes TypeScript project compilation via `tsc -b`. Unit tests cover status precedence, overlapping categories, stock rules, search, metrics, component rendering, and malformed local-storage records. Automated Playwright E2E tests in Chromium verify application loading, main title visibility, and opening and closing the medication creation dialog flow.
+Required local gates are `npm run format:check`, `npm run lint`, `npm run typecheck` (`tsc -b`), `npm test`, `npm run build`, and `npm run test:e2e`. The build includes TypeScript project compilation via `tsc -b`. Vitest includes both `tests/**/*.test.{ts,tsx}` and `src/**/*.test.{ts,tsx}`, so the component and domain suites run under `npm test`; those tests cover status precedence, overlapping categories, stock rules, search, metrics, component rendering, and malformed local-storage records. The current automated Playwright E2E test in Chromium verifies application loading, main title visibility, and opening and closing the medication creation dialog flow.
 
 ## 8. CI/CD
 
@@ -73,15 +73,15 @@ Reuse the current React/Vite/Tailwind stack before adding dependencies. Do not a
 ## 12. Stack conformance audit
 
 **Audit date:** 2026-09-10
-**Overall status:** PASS
+**Overall status:** PASS WITH WARNINGS
 
 | Area     | Specification                                        | Implementation                                                                                                                                              | Severity | Action                                             |
 | -------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------- |
-| Runtime  | npm lockfile and Node 22 CI                          | Manifest, lockfile, and CI agree on Node.js 22.x and strict `npm ci`                                                                                        | Info     | Maintain Node 22.x alignment across workflows      |
+| Runtime  | npm lockfile and Node 22 CI                          | GitHub Actions pins Node.js 22.x and installs from the lockfile with `npm ci`; the manifest and lockfile do not enforce a project-level Node.js engine       | Info     | Keep the CI runtime explicit; add an engine only if project-level enforcement becomes necessary |
 | Security | No secrets and validated storage boundary            | No env vars or privileged service; production dependency audit (`npm audit --omit=dev --audit-level=high`) enforced in CI; stored records validated on load | Info     | Continue automated security audits in CI           |
-| Testing  | Unit, component, typecheck, lint, and Playwright E2E | Vitest domain/UI tests, ESLint 10, Prettier, `tsc -b` typecheck, build, and Playwright Chromium E2E pass in CI                                              | Info     | Maintain Playwright coverage alongside unit tests  |
-| Delivery | Static output and crawler files                      | `dist` contains Vite output and public metadata files after build                                                                                           | Info     | Verify provider responses after published releases |
+| Testing  | Unit, component, typecheck, lint, and Playwright E2E | `npm test` includes `tests/**/*.test.{ts,tsx}` and `src/**/*.test.{ts,tsx}` for component and domain coverage; CI also runs ESLint 10, Prettier, `tsc -b`, build, and the focused Playwright Chromium flow | Info     | Maintain Playwright coverage alongside unit tests  |
+| Delivery | Static output and crawler files                      | `dist` contains Vite output and public metadata files after build; provider-side delivery responses are not verified by the repository pipeline            | Low      | Verify provider responses after published releases |
 
 ### Conclusion
 
-The repository fully conforms to a small client-only React 19 / Vite 7 / Tailwind CSS 4 stack with automated Playwright Chromium E2E testing, TypeScript project references (`tsc -b`), strict local storage sanitization, and a comprehensive Node 22 CI verification pipeline.
+The local/client stack and automated quality pipeline conform to the documented React 19 / Vite 7 / Tailwind CSS 4 baseline, including focused Playwright Chromium E2E testing, TypeScript project references (`tsc -b`), strict local-storage sanitization, and the Node.js 22.x CI workflow. External provider-side delivery verification remains a separate low-severity warning.
