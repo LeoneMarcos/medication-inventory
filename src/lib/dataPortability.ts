@@ -1,4 +1,5 @@
 import type { Medication } from "../types";
+import { MAX_STOCK_LIMIT } from "./medications";
 import { isMedication } from "./storage";
 
 export const BACKUP_SCHEMA_VERSION = 1;
@@ -14,21 +15,24 @@ export type BackupParseResult =
   | { success: false; error: string };
 
 /**
- * Escapes a single CSV cell value according to standard CSV rules:
+ * Escapes a single CSV cell value according to standard CSV rules and neutralizes
+ * formula-leading text so spreadsheet applications treat it as data:
  * Wraps in double quotes if it contains commas, double quotes, or newlines/carriage returns,
  * and doubles internal double quotes.
  */
 export function escapeCsvCell(value: string | number): string {
   const str = String(value ?? "");
+  const spreadsheetSafeValue =
+    typeof value === "string" && /^[=+\-@]/.test(str) ? `'${str}` : str;
   if (
-    str.includes(",") ||
-    str.includes('"') ||
-    str.includes("\n") ||
-    str.includes("\r")
+    spreadsheetSafeValue.includes(",") ||
+    spreadsheetSafeValue.includes('"') ||
+    spreadsheetSafeValue.includes("\n") ||
+    spreadsheetSafeValue.includes("\r")
   ) {
-    return `"${str.replaceAll('"', '""')}"`;
+    return `"${spreadsheetSafeValue.replaceAll('"', '""')}"`;
   }
-  return str;
+  return spreadsheetSafeValue;
 }
 
 /**
@@ -131,6 +135,32 @@ export function parseBackupJson(rawJson: string): BackupParseResult {
       success: false,
       error:
         "Invalid backup file: one or more medication records are invalid or corrupted.",
+    };
+  }
+
+  const allStockValuesWithinLimit = medications.every((medication) => {
+    const { quantity, minimumStock } = medication as Medication;
+    return (
+      Number.isSafeInteger(quantity) &&
+      quantity <= MAX_STOCK_LIMIT &&
+      Number.isSafeInteger(minimumStock) &&
+      minimumStock <= MAX_STOCK_LIMIT
+    );
+  });
+  if (!allStockValuesWithinLimit) {
+    return {
+      success: false,
+      error: "Invalid backup file: stock values exceed the supported safe-integer limit.",
+    };
+  }
+
+  const medicationIds = medications.map(
+    (medication) => (medication as Medication).id,
+  );
+  if (new Set(medicationIds).size !== medicationIds.length) {
+    return {
+      success: false,
+      error: "Invalid backup file: medication IDs must be unique.",
     };
   }
 

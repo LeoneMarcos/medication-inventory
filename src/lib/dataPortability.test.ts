@@ -4,6 +4,7 @@ import {
   exportInventoryCsv,
   parseBackupJson,
 } from "./dataPortability";
+import { MAX_STOCK_LIMIT } from "./medications";
 import type { Medication } from "../types";
 
 const sampleMedication1: Medication = {
@@ -45,6 +46,39 @@ describe("exportInventoryCsv", () => {
     expect(csv).toContain('"Ibuprofen ""500mg"", Extra"');
     expect(csv).toContain('"BATCH-002\nLine2"');
     expect(csv).toContain('"Generic Lab, Inc."');
+  });
+
+  it.each(["=FORMULA()", "+FORMULA()", "-FORMULA()", "@FORMULA()"])(
+    "neutralizes formula-leading text fields (%s)",
+    (formula) => {
+      const csv = exportInventoryCsv([
+        {
+          ...sampleMedication1,
+          name: formula,
+          batch: formula,
+          manufacturer: formula,
+        },
+      ]);
+
+      expect(csv.split("\n")[1]).toBe(
+        [
+          `'${formula}`,
+          `'${formula}`,
+          `'${formula}`,
+          "50",
+          "10",
+          "2027-06-30",
+        ].join(","),
+      );
+    },
+  );
+
+  it("applies CSV escaping after neutralizing a formula-leading field", () => {
+    const csv = exportInventoryCsv([
+      { ...sampleMedication1, name: '=HYPERLINK("https://example.com", "x")' },
+    ]);
+
+    expect(csv).toContain('"\'=HYPERLINK(""https://example.com"", ""x"")"');
   });
 });
 
@@ -138,6 +172,41 @@ describe("parseBackupJson", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error).toContain("invalid or corrupted");
+    }
+  });
+
+  it("rejects stock values above the supported safe-integer limit", () => {
+    for (const field of ["quantity", "minimumStock"] as const) {
+      const json = JSON.stringify({
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString(),
+        medications: [
+          { ...sampleMedication1, [field]: MAX_STOCK_LIMIT + 1 },
+        ],
+      });
+
+      const result = parseBackupJson(json);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain("safe-integer limit");
+      }
+    }
+  });
+
+  it("rejects a backup containing duplicate medication IDs", () => {
+    const json = JSON.stringify({
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      medications: [
+        sampleMedication1,
+        { ...sampleMedication2, id: sampleMedication1.id },
+      ],
+    });
+
+    const result = parseBackupJson(json);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("medication IDs must be unique");
     }
   });
 });

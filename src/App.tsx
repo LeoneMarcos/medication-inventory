@@ -247,7 +247,6 @@ function App() {
           "Storage failure: could not restore inventory to browser storage.",
         type: "error",
       });
-      setPendingRestoreMedications(null);
     }
   };
 
