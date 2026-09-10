@@ -57,7 +57,7 @@ Inventory data remains available locally in the browser, allowing the applicatio
 
 The short showcase video covers the main inventory flow and interface.
 
-https://github.com/user-attachments/assets/d154fc20-bda2-4df9-8d5f-1b5e6b24626c
+[Watch the current showcase video](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
 
 ---
 
@@ -119,7 +119,7 @@ npm test -- --run
 npm run build
 ```
 
-The automated checks cover deterministic inventory rules, linting, and production build validation.
+The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical showcase video on demand; the stable video URL is reused by the project README, profile, and portfolio.
 
 ## License
 
