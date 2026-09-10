@@ -68,7 +68,7 @@ The short showcase video covers the main inventory flow and interface.
 
 - **Inventory overview** — Real-time classification into Healthy, Low Stock, Expiring Soon (30-day window), and Expired.
 - **Interactive dashboard** — Click any metric card to filter the inventory list to matching batches.
-- **Needs attention alert** — Instant banner highlighting records that require immediate reorder or disposal.
+- **Status filters** — Narrow the inventory to needs attention, healthy, low stock, expiring soon, or expired records without duplicating the dashboard summary.
 - **Batches & expiration control** — Strict date validation preventing invalid calendar dates and retaining proper records.
 - **Safe stock adjustments** — Add or remove units with a live post-adjustment balance preview and bounds checks preventing negative stock.
 - **Faceted search & sorting** — Search by medication name, active ingredient, batch number, or manufacturer, with sorting by Name, Expiration, or Quantity.
@@ -169,7 +169,7 @@ npm run lint
 npm run build
 ```
 
-The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical showcase video on demand; the stable video URL is reused by the project README, profile, and portfolio.
+The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical video and hero screenshot when product/showcase inputs change, and can also be run manually; those stable media paths are reused by the project README, profile, and portfolio.
 
 ### Negative QA Scripts
 
