@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
     paths:
+      - "src/**"
+      - "public/**"
+      - "showcase-assets/capture-flow.mjs"
+      - "showcase-assets/convert-showcase.mjs"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/showcase.yml"
 
 permissions:
