@@ -1,11 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="icon" type="image/webp" href="/medication-inventory-mark.webp" />
+    <link rel="icon" type="image/svg+xml" href="/inventory-symbol.svg" />
+    <link rel="alternate icon" type="image/webp" href="/medication-inventory-mark.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#17685b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101a17" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Medication Inventory helps teams track medication stock, batches, expiration dates, and movements in a focused browser workspace." />
+    <link rel="canonical" href="https://inventory.leonemarcos.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Medication Inventory" />
+    <meta property="og:description" content="Track medication stock, batches, expiration dates, and inventory movements in a focused browser workspace." />
+    <meta property="og:url" content="https://inventory.leonemarcos.com/" />
+    <meta property="og:image" content="https://inventory.leonemarcos.com/medication-inventory-mark.webp" />
+    <meta property="og:image:alt" content="Medication Inventory logo" />
+    <script>
+      (() => {
+        let theme;
+        try { theme = localStorage.getItem('medication-inventory-theme'); } catch {}
+        document.documentElement.dataset.theme = theme === 'light' || theme === 'dark'
+          ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      })();
+    </script>
     <title>Medication Inventory</title>
   </head>
   <body>

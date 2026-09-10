@@ -1,30 +1,30 @@
 <p align="center">
-  <img src="./public/medication-inventory-mark.webp" alt="Medication Inventory logo" width="160" />
+  <img src="./public/inventory-symbol.svg" alt="Medication Inventory logo" width="84" height="84" />
 </p>
 
 <h1 align="center">Medication Inventory</h1>
 
 <p align="center">
-  A focused inventory workspace for medication stock, batches, expiration dates, and movement control.
+  A focused, responsive web workspace for medication stock tracking, batch numbers, expiration monitoring, and unit movements.
 </p>
 
 <p align="center">
   <a href="https://inventory.leonemarcos.com/">
-    <img src="https://img.shields.io/badge/Demo-Live-brightgreen?style=flat-square" alt="Live Demo" />
+    <img src="https://img.shields.io/badge/Demo-Live-17685b?style=flat-square" alt="Live Demo" />
   </a>
   <a href="https://github.com/LeoneMarcos/medication-inventory/actions/workflows/ci.yml">
     <img src="https://github.com/LeoneMarcos/medication-inventory/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" />
   </a>
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache%202.0-green?style=flat-square" alt="Apache 2.0 License" />
+    <img src="https://img.shields.io/badge/License-Apache%202.0-233b32?style=flat-square" alt="Apache 2.0 License" />
   </a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/React-19-17685b?style=flat-square&logo=react&logoColor=white" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.9" />
   <img src="https://img.shields.io/badge/Vite-7-646cff?style=flat-square&logo=vite&logoColor=white" alt="Vite 7" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 3.4" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-17685b?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 3.4" />
   <img src="https://img.shields.io/badge/Vitest-3-6e9f18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest 3" />
 </p>
 
@@ -32,6 +32,8 @@
   <a href="#overview">Overview</a> ·
   <a href="#showcase">Showcase</a> ·
   <a href="#features">Features</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#storage-and-limits">Storage & Limits</a> ·
   <a href="#tech-stack">Tech Stack</a> ·
   <a href="#quick-start">Quick Start</a>
 </p>
@@ -40,20 +42,21 @@
 
 ## Overview
 
-**Medication Inventory** is a responsive medication stock-control application built with React and TypeScript. It centralizes medication records, batch information, expiration dates, minimum stock levels, and inventory movements in a clear browser-based workspace.
+**Medication Inventory** is a client-side pharmaceutical and clinical stock management application designed with a clean teal-green identity, light/dark theme adaptation, and responsive desktop/mobile layouts.
 
-Inventory data remains available locally in the browser, allowing the application to work without a dedicated backend.
+It gives clinic staff, pharmacy supervisors, and small healthcare teams instant visibility into stock levels, batch numbers, manufacturers, and expiration schedules without requiring complex server infrastructure or third-party accounts.
 
-### Highlights
-
-- **Medication records** — Track medication name, batch, manufacturer, expiration date, stock, and minimum stock.
-- **Stock movements** — Add or remove defined quantities while preventing negative inventory.
-- **Inventory status** — Identify healthy, low-stock, expiring-soon, and expired records.
-- **Fast search** — Find records by medication name, batch, or manufacturer.
+<p align="center">
+  <img src="./showcase-assets/screenshots/hero-desktop.png" alt="Medication Inventory Desktop Dashboard" width="100%" />
+</p>
 
 ---
 
 ## Showcase
+
+Watch the short product walk-through demonstrating initial stock review, adding records, search, status filtering, stock adjustments, and theme switching:
+
+[![Watch Medication Inventory Showcase Video](./showcase-assets/screenshots/hero-desktop.png)](https://raw.githubusercontent.com/LeoneMarcos/medication-inventory/main/showcase-assets/medication-inventory-showcase.mp4)
 
 The short showcase video covers the main inventory flow and interface.
 
@@ -63,32 +66,70 @@ The short showcase video covers the main inventory flow and interface.
 
 ## Features
 
-- Add and edit medication records.
-- Register batch, manufacturer, expiration date, stock, and minimum stock information.
-- Add or remove a defined number of units while preventing negative inventory.
-- Classify records as healthy, low stock, expiring soon, or expired.
-- Review dashboard metrics for inventory health.
-- Search by medication name, batch, or manufacturer.
-- Keep inventory data locally in the browser.
-- Responsive interface for desktop and mobile use.
+- **Inventory overview** — Real-time classification into Healthy, Low Stock, Expiring Soon (30-day window), and Expired.
+- **Interactive dashboard** — Click any metric card to filter the inventory list to matching batches.
+- **Needs attention alert** — Instant banner highlighting records that require immediate reorder or disposal.
+- **Batches & expiration control** — Strict date validation preventing invalid calendar dates and retaining proper records.
+- **Safe stock adjustments** — Add or remove units with a live post-adjustment balance preview and bounds checks preventing negative stock.
+- **Faceted search & sorting** — Search by medication name, active ingredient, batch number, or manufacturer, with sorting by Name, Expiration, or Quantity.
+- **Light & dark themes** — Built-in theme switcher with flash-free initial hydration and system color scheme detection.
+- **Accessible & compliant** — Full keyboard trap in modals, ARIA labels, live status regions, and `prefers-reduced-motion` respect.
+
+---
+
+## Architecture
+
+The codebase follows a straightforward, low-friction architecture without unnecessary abstraction layers:
+
+```
+src/
+├── components/
+│   ├── domain/           # Core domain UI (DashboardStats, InventoryTable, MedicationForm)
+│   └── ui/               # Reusable primitives (Button, Card, Input, Modal)
+├── hooks/
+│   ├── useInventory.ts   # Inventory state management and safe persistence boundary
+│   └── useTheme.ts       # Light/Dark mode state and DOM synchronization
+├── lib/
+│   ├── inventory.ts      # Filtering and search predicates
+│   ├── medications.ts    # Domain logic (status calculation, stock math, date parsers)
+│   ├── metrics.ts        # Dashboard statistics calculation
+│   ├── storage.ts        # Malformed record sanitization and localStorage I/O
+│   └── utils.ts          # Style merging utility (clsx + tailwind-merge)
+└── types/
+    └── index.ts          # Core TypeScript types (Medication, MedicationStatus, etc.)
+```
+
+---
+
+## Storage and Limits
+
+- **Storage mechanism:** Persistent local storage under key `medication-inventory-data`.
+- **Sanitization:** `parseStoredMedications` verifies every field on startup, rejecting corrupted records, invalid types, and impossible calendar dates.
+- **Atomic persistence & Error handling:** State mutations are atomic—in-memory inventory is only committed if localStorage persistence succeeds. If browser storage fails (e.g. `QuotaExceededError` or private browsing restrictions), operations display proportional alert notices, preserve open dialogs and entered data for retry, and never falsely claim changes were saved.
+- **Representation limit:** Stock adjustments enforce JavaScript's safe integer boundary (`Number.MAX_SAFE_INTEGER`, 9,007,199,254,740,991 units) to prevent numeric overflow while strictly preserving user data.
+
+---
 
 ## Tech Stack
 
 | Area | Technologies |
 | --- | --- |
-| Frontend | React, TypeScript |
-| Styling | Tailwind CSS |
-| UI | Lucide React |
-| Build | Vite |
-| Testing | Vitest |
-| Linting | ESLint |
+| Frontend | React 19, TypeScript 5.9 |
+| Styling | Tailwind CSS 3.4, Custom CSS Tokens (Teal theme) |
+| Icons | Lucide React |
+| Tooling | Vite 7 |
+| Testing | Vitest 3 |
+| Linting | ESLint 9 |
 | CI | GitHub Actions |
+
+---
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js and npm
+- Node.js 22 (recommended for Vite 7) and npm (use `npm ci` to respect `package-lock.json`)
+- Optional for showcase capture and QA: Chrome/Playwright, FFmpeg, and an active local preview/dev server
 
 ### 1. Clone the repository
 
@@ -100,7 +141,7 @@ cd medication-inventory
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm ci
 ```
 
 ### 3. Run locally
@@ -109,18 +150,44 @@ npm install
 npm run dev
 ```
 
-Open the localhost URL printed by Vite.
+Open the local server URL printed by Vite (typically `http://localhost:5173`).
 
-## Testing
+---
+
+## Testing & Quality Assurance
+
+Run the automated test suite, type-checking, and lint checks:
 
 ```bash
-npm run lint
+# Run unit and boundary tests
 npm test -- --run
+
+# Run ESLint
+npm run lint
+
+# Build production bundle
 npm run build
 ```
 
 The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical showcase video on demand; the stable video URL is reused by the project README, profile, and portfolio.
 
+### Negative QA Scripts
+
+- `node scripts/negative-storage-qa.mjs` — Automated verification of storage failure modals and retry flow. Requires an active local application server (default `http://127.0.0.1:4181/` or configured via `BASE_URL`).
+
+---
+
+## Documentation
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — System architecture and component contracts.
+- [`DESIGN.md`](DESIGN.md) — Visual tokens, layout specifications, and interaction states.
+- [`PRODUCT.md`](PRODUCT.md) — Product definition and requirements.
+- [`STACK.md`](STACK.md) — Technology stack constraints and rules.
+- [`TEST_PLAN.md`](TEST_PLAN.md) — Comprehensive verification strategy.
+- [`docs/STATUS.md`](docs/STATUS.md) — Status log and release evidence.
+
+---
+
 ## License
 
-This project is licensed under the **Apache License 2.0**. See [`LICENSE`](LICENSE) for details.
+Licensed under the **Apache License 2.0**. See [`LICENSE`](LICENSE) for details.

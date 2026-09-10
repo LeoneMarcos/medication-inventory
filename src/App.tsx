@@ -1,38 +1,320 @@
-import { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CircleCheck,
+  HardDrive,
+  Moon,
+  Plus,
+  Sun,
+  X,
+} from 'lucide-react';
+import { useTheme } from './hooks/useTheme';
 import { useInventory } from './hooks/useInventory';
 import { Button } from './components/ui/Button';
 import { Modal } from './components/ui/Modal';
 import { DashboardStats } from './components/domain/DashboardStats';
-import { InventoryTable } from './components/domain/InventoryTable';
+import { InventoryTable, type InventoryFilter } from './components/domain/InventoryTable';
 import { MedicationForm } from './components/domain/MedicationForm';
+import { getMedicationFlags } from './lib/medications';
 import type { Medication } from './types';
 
-function BrandMark({ className }: { className?: string }) {
-  return <img src="/medication-inventory-mark.webp" alt="" aria-hidden="true" className={className} />;
+interface Notice {
+  message: string;
+  type: 'success' | 'error';
 }
-
-const Pill = BrandMark;
 
 function App() {
-  const { medications, addMedication, updateMedication, deleteMedication, addQuantity, removeQuantity } = useInventory();
+  const { theme, toggleTheme } = useTheme();
+  const {
+    medications,
+    addMedication,
+    updateMedication,
+    deleteMedication,
+    addQuantity,
+    removeQuantity,
+  } = useInventory();
+
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | undefined>();
-  const [deletingMedicationId, setDeletingMedicationId] = useState<string>();
+  const [deletingMedicationId, setDeletingMedicationId] = useState<string | undefined>();
+  const [filter, setFilter] = useState<InventoryFilter>('all');
+
+  useEffect(() => {
+    if (!notice) return;
+    const timeout = window.setTimeout(() => setNotice(null), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+
+
   const deletingMedication = medications.find(({ id }) => id === deletingMedicationId);
-  const closeModal = () => { setCreateOpen(false); setEditingMedication(undefined); };
-  const saveMedication = (data: Omit<Medication, 'id'>) => {
-    if (editingMedication) updateMedication(editingMedication.id, data); else addMedication(data);
-    closeModal();
+  const attentionCount = medications.filter(
+    (medication) => !getMedicationFlags(medication).isHealthy,
+  ).length;
+
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const closeModal = () => {
+    setCreateOpen(false);
+    setEditingMedication(undefined);
   };
-  const requestDelete = (id: string) => setDeletingMedicationId(id);
-  const closeDeleteModal = () => setDeletingMedicationId(undefined);
-  const confirmDelete = () => { if (deletingMedicationId) deleteMedication(deletingMedicationId); closeDeleteModal(); };
-  return <div className="min-h-screen font-sans text-slate-900 pb-20">
-    <header className="bg-white/45 backdrop-blur-2xl border-b border-white/70 sticky top-0 z-40 shadow-[0_1px_0_rgba(49,93,142,0.08)]"><div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between"><div className="flex items-center gap-3"><div className="bg-gradient-to-br from-blue-600 via-brand-500 to-cyan-400 p-2.5 rounded-2xl text-white shadow-lg shadow-brand-500/25"><Pill className="h-7 w-7" /></div><div><h1 className="font-display text-xl font-extrabold text-slate-800">Medication Inventory</h1><p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.12em]">Inventory management</p></div></div><Button onClick={() => setCreateOpen(true)} icon={PlusCircle} className="shadow-lg shadow-brand-500/20">Add medication</Button></div></header>
-    <main className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-10 space-y-10"><section className="animate-rise"><div className="mb-6"><h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-800">Dashboard</h2><p className="text-sm text-slate-500 font-medium mt-1">Medication inventory health at a glance</p></div><DashboardStats medications={medications} /></section><section className="space-y-6 animate-rise" style={{ animationDelay: '100ms' }}><div className="flex items-center gap-2"><div className="h-1 w-8 rounded-full bg-gradient-to-r from-brand-500 to-cyan-400" /><h3 className="font-display font-extrabold text-slate-700 tracking-tight">INVENTORY</h3></div><InventoryTable medications={medications} onAddQuantity={addQuantity} onRemoveQuantity={removeQuantity} onEdit={setEditingMedication} onDelete={requestDelete} /></section></main>
-    <Modal isOpen={isCreateOpen || Boolean(editingMedication)} onClose={closeModal} title={editingMedication ? 'Edit medication' : 'Add medication'}><MedicationForm initialMedication={editingMedication} onSubmit={saveMedication} /></Modal>
-    <Modal isOpen={Boolean(deletingMedication)} onClose={closeDeleteModal} title="Delete medication?" description="This action cannot be undone."><div className="flex justify-center"><Button type="button" variant="primary" onClick={confirmDelete}>Delete medication</Button></div></Modal>
-  </div>;
+
+  const saveMedication = (data: Omit<Medication, 'id'>): boolean => {
+    const isEdit = Boolean(editingMedication);
+    const success = editingMedication
+      ? updateMedication(editingMedication.id, data)
+      : addMedication(data);
+
+    if (success) {
+      setNotice({
+        message: isEdit ? `${data.name} updated.` : `${data.name} added to inventory.`,
+        type: 'success',
+      });
+      closeModal();
+      return true;
+    } else {
+      setNotice({
+        message: 'Storage failure: could not save medication to your browser storage.',
+        type: 'error',
+      });
+      return false;
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setDeletingMedicationId(undefined);
+    setDeleteError(null);
+  };
+
+  const confirmDelete = (): boolean => {
+    if (deletingMedicationId) {
+      const name = deletingMedication?.name ?? 'Medication';
+      const success = deleteMedication(deletingMedicationId);
+      if (success) {
+        setNotice({
+          message: `${name} deleted from inventory.`,
+          type: 'success',
+        });
+        closeDeleteModal();
+        return true;
+      } else {
+        setNotice({
+          message: 'Storage failure: could not remove medication from storage.',
+          type: 'error',
+        });
+        setDeleteError('Storage failure: could not remove medication from storage.');
+        return false;
+      }
+    }
+    return false;
+  };
+
+  const handleAddQuantity = (id: string, amount: number): boolean => {
+    const success = addQuantity(id, amount);
+    if (success) {
+      setNotice({
+        message: `${amount} ${amount === 1 ? 'unit' : 'units'} added to stock.`,
+        type: 'success',
+      });
+    } else {
+      setNotice({
+        message: 'Storage failure: stock change could not be saved to local storage.',
+        type: 'error',
+      });
+    }
+    return success;
+  };
+
+  const handleRemoveQuantity = (id: string, amount: number): boolean => {
+    const success = removeQuantity(id, amount);
+    if (success) {
+      setNotice({
+        message: `${amount} ${amount === 1 ? 'unit' : 'units'} removed from stock.`,
+        type: 'success',
+      });
+    } else {
+      setNotice({
+        message: 'Storage failure: stock change could not be saved to local storage.',
+        type: 'error',
+      });
+    }
+    return success;
+  };
+
+  return (
+    <div className="app-shell">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+
+      <header className="app-header">
+        <div className="page-width header-inner">
+          <a className="brand" href="#main" aria-label="Medication Inventory home">
+            <img
+              className="brand-symbol"
+              src="/inventory-symbol.svg"
+              alt=""
+              width="44"
+              height="44"
+            />
+            <span>
+              Medication
+              <span className="brand-subtitle">A little order. Better care.</span>
+            </span>
+          </a>
+
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <span className="theme-toggle-icon">
+              {theme === 'dark' ? (
+                <Sun size={18} aria-hidden="true" />
+              ) : (
+                <Moon size={18} aria-hidden="true" />
+              )}
+            </span>
+            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="main" className="page-width main-content">
+        <section className="page-heading">
+          <div>
+            <span className="eyebrow heading-eyebrow">
+              <span aria-hidden="true" /> YOUR DAILY OVERVIEW
+            </span>
+            <h1>Stock, thoughtfully organized.</h1>
+            <p className="page-description">
+              Stay on top of quantities, batches and expiration dates.
+            </p>
+          </div>
+          <Button onClick={() => setCreateOpen(true)} icon={Plus}>
+            Add medication
+          </Button>
+        </section>
+
+        <section aria-label="Inventory overview">
+          <DashboardStats
+            medications={medications}
+            activeFilter={filter}
+            onFilter={(nextFilter) => setFilter(nextFilter)}
+          />
+        </section>
+
+        {attentionCount > 0 && (
+          <section className="attention-banner needs-attention" aria-label="Inventory alerts">
+            <AlertTriangle size={18} className="attention-icon" aria-hidden="true" />
+            <div>
+              <strong>
+                {attentionCount} {attentionCount === 1 ? 'medication needs' : 'medications need'} attention
+              </strong>
+              <p>Low stock, expiring soon or past expiration.</p>
+            </div>
+            <button
+              type="button"
+              className="text-action"
+              onClick={() => {
+                setFilter('attention');
+                document.getElementById('inventory')?.scrollIntoView({
+                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                    ? 'instant'
+                    : 'smooth',
+                  block: 'start',
+                });
+              }}
+            >
+              Review <ArrowRight size={15} aria-hidden="true" />
+            </button>
+          </section>
+        )}
+
+        <section id="inventory" className="inventory-section">
+          <InventoryTable
+            medications={medications}
+            filter={filter}
+            onFilter={setFilter}
+            onCreate={() => setCreateOpen(true)}
+            onAddQuantity={handleAddQuantity}
+            onRemoveQuantity={handleRemoveQuantity}
+            onEdit={setEditingMedication}
+            onDelete={setDeletingMedicationId}
+          />
+        </section>
+
+        <footer className="app-footer">
+          <span>
+            <HardDrive size={14} aria-hidden="true" /> Stored on this device, in this browser.
+          </span>
+        </footer>
+      </main>
+
+      <div className="notification-region" role="status" aria-live="polite" aria-atomic="true">
+        {notice && (
+          <div
+            className={`notification ${notice.type === 'error' ? 'notification-error' : ''}`}
+          >
+            {notice.type === 'error' ? (
+              <AlertTriangle size={20} aria-hidden="true" />
+            ) : (
+              <CircleCheck size={20} aria-hidden="true" />
+            )}
+            <span>{notice.message}</span>
+            <button
+              type="button"
+              aria-label="Dismiss notification"
+              onClick={() => setNotice(null)}
+            >
+              <X size={17} aria-hidden="true" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <Modal
+        isOpen={isCreateOpen || Boolean(editingMedication)}
+        onClose={closeModal}
+        title={editingMedication ? 'Edit medication' : 'Add medication'}
+        description="Medication details and stock thresholds. Required fields are marked *."
+      >
+        <MedicationForm
+          initialMedication={editingMedication}
+          onSubmit={saveMedication}
+          onCancel={closeModal}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(deletingMedication)}
+        onClose={closeDeleteModal}
+        title="Delete medication?"
+        description="This action cannot be undone."
+      >
+        <p className="delete-description">
+          Remove <strong className="delete-name">{deletingMedication?.name}</strong> and its stock
+          details from your inventory?
+        </p>
+        {deleteError && (
+          <p className="mt-3 text-xs text-red-600 dark:text-red-400 font-medium" role="alert">
+            {deleteError}
+          </p>
+        )}
+        <div className="flex justify-end gap-3 mt-4">
+          <Button variant="secondary" onClick={closeDeleteModal}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Delete medication
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
 }
+
 export default App;

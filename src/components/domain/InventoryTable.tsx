@@ -1,49 +1,409 @@
 import { useState } from 'react';
-import { ArrowDownCircle, ArrowUpCircle, Edit3, Search, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  CircleCheck,
+  CircleX,
+  Clock3,
+  Edit3,
+  Minus,
+  Pill,
+  Plus,
+  Search,
+  Trash2,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { filterMedications } from '../../lib/inventory';
 import { getMedicationCategories } from '../../lib/medications';
 import type { Medication, MedicationStatus } from '../../types';
 import { Button } from '../ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 
-interface InventoryTableProps {
+export type InventoryFilter = MedicationStatus | 'all' | 'attention';
+
+export interface InventoryTableProps {
   medications: Medication[];
-  onAddQuantity: (id: string, amount: number) => void;
-  onRemoveQuantity: (id: string, amount: number) => void;
+  filter: InventoryFilter;
+  onFilter: (filter: InventoryFilter) => void;
+  onCreate: () => void;
+  onAddQuantity: (id: string, amount: number) => boolean;
+  onRemoveQuantity: (id: string, amount: number) => boolean;
   onEdit: (medication: Medication) => void;
   onDelete: (id: string) => void;
 }
 
-const statusStyles: Record<MedicationStatus, string> = {
-  healthy: 'bg-brand-500/85 text-white ring-white/70 border border-white/65 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_4px_10px_rgba(14,165,233,0.16)]',
-  'low stock': 'bg-brand-500/85 text-white ring-white/70 border border-white/65 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_4px_10px_rgba(14,165,233,0.16)]',
-  'expiring soon': 'bg-brand-500/85 text-white ring-white/70 border border-white/65 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_4px_10px_rgba(14,165,233,0.16)]',
-  expired: 'bg-brand-500/85 text-white ring-white/70 border border-white/65 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_4px_10px_rgba(14,165,233,0.16)]',
+const statuses: Record<MedicationStatus, { label: string; tone: string; icon: LucideIcon }> = {
+  healthy: { label: 'Healthy', tone: 'healthy', icon: CircleCheck },
+  'low stock': { label: 'Low stock', tone: 'low', icon: AlertTriangle },
+  'expiring soon': { label: 'Expiring soon', tone: 'expiring', icon: Clock3 },
+  expired: { label: 'Expired', tone: 'expired', icon: CircleX },
 };
 
-export function InventoryTable({ medications, onAddQuantity, onRemoveQuantity, onEdit, onDelete }: InventoryTableProps) {
+const filterOptions: { value: InventoryFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'attention', label: 'Needs attention' },
+  { value: 'healthy', label: 'Healthy' },
+  { value: 'low stock', label: 'Low stock' },
+  { value: 'expiring soon', label: 'Expiring soon' },
+  { value: 'expired', label: 'Expired' },
+];
+
+export function InventoryTable({
+  medications,
+  filter,
+  onFilter,
+  onCreate,
+  onAddQuantity,
+  onRemoveQuantity,
+  onEdit,
+  onDelete,
+}: InventoryTableProps) {
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<'name' | 'expiration' | 'quantity'>('name');
   const [movement, setMovement] = useState<{ medication: Medication; type: 'add' | 'remove' }>();
   const [amount, setAmount] = useState('1');
-  const filteredMedications = filterMedications(medications, query);
-  const emptyStateHint = query.trim() ? 'Try a different search term.' : 'Add your first medication to start tracking inventory.';
-  const closeMovement = () => { setMovement(undefined); setAmount('1'); };
+  const [movementError, setMovementError] = useState('');
+
+  const filteredMedications = filterMedications(medications, query)
+    .filter((medication) => {
+      const categories = getMedicationCategories(medication);
+      if (filter === 'all') return true;
+      if (filter === 'attention') return !categories.includes('healthy');
+      return categories.includes(filter);
+    })
+    .sort((a, b) => {
+      if (sort === 'expiration') return a.expirationDate.localeCompare(b.expirationDate);
+      if (sort === 'quantity') return a.quantity - b.quantity;
+      return a.name.localeCompare(b.name);
+    });
+
+  const closeMovement = () => {
+    setMovement(undefined);
+    setAmount('1');
+    setMovementError('');
+  };
+
   const submitMovement = (event: React.FormEvent) => {
     event.preventDefault();
     const value = Number(amount);
-    if (!movement || !Number.isInteger(value) || value <= 0) return;
+    if (!movement || !Number.isInteger(value) || value <= 0) {
+      setMovementError('Enter a positive whole number.');
+      return;
+    }
+    const current = medications.find((item) => item.id === movement.medication.id);
+    if (!current) {
+      setMovementError('This medication is no longer available.');
+      return;
+    }
+    if (movement.type === 'remove' && value > current.quantity) {
+      setMovementError(`Only ${current.quantity.toLocaleString('en-US')} units are available.`);
+      return;
+    }
+
     try {
-      if (movement.type === 'add') onAddQuantity(movement.medication.id, value);
-      else onRemoveQuantity(movement.medication.id, value);
-      closeMovement();
+      const ok = movement.type === 'add'
+        ? onAddQuantity(current.id, value)
+        : onRemoveQuantity(current.id, value);
+
+      if (ok) {
+        closeMovement();
+      } else {
+        setMovementError('Storage failure: stock change could not be saved to local storage.');
+      }
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : 'Unable to update stock.');
+      setMovementError(error instanceof Error ? error.message : 'Unable to update stock.');
     }
   };
-  return <Card className="w-full overflow-hidden"><CardHeader className="border-b border-white/75 bg-white/28 px-5 md:px-8 py-7"><div className="flex flex-col md:flex-row md:items-center justify-between gap-5"><div><CardTitle>Medication inventory</CardTitle><p className="text-sm text-slate-600 font-medium mt-1">Track batches, expiration dates and stock movements</p></div><div className="relative w-full md:w-80 group"><Search className="absolute left-3.5 top-3 h-5 w-5 text-slate-500 group-focus-within:text-brand-500 transition-colors" /><Input aria-label="Search medications" placeholder="Search name, batch or manufacturer..." className="pl-11 h-11 bg-white/35 border-white/90 focus:bg-white/75 focus:shadow-md transition-all" value={query} onChange={(event) => setQuery(event.target.value)} /></div></div></CardHeader>
-    <CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full text-sm text-left"><thead className="text-[10px] font-black text-slate-600 uppercase tracking-[0.14em] bg-white/18"><tr><th className="px-6 py-4 border-t-2 border-brand-500">Medication</th><th className="px-6 py-4 border-t-2 border-brand-500">Batch</th><th className="px-6 py-4 border-t-2 border-brand-500">Stock</th><th className="px-6 py-4 border-t-2 border-brand-500">Expiration</th><th className="px-6 py-4 border-t-2 border-brand-500">Status</th><th className="px-6 py-4 text-right border-t-2 border-brand-500">Actions</th></tr></thead><tbody className="divide-y divide-white/55">{filteredMedications.map((medication) => { const statuses = getMedicationCategories(medication); return <tr key={medication.id} className="bg-white/18 hover:bg-white/42 transition-colors"><td className="px-6 py-5"><div><div className="font-bold text-slate-800">{medication.name}</div><div className="text-xs text-slate-500">{medication.manufacturer}</div></div></td><td className="px-6 py-5 font-mono text-xs text-slate-600">{medication.batch}</td><td className="px-6 py-5 font-bold text-slate-800">{medication.quantity} units <span className="block text-xs font-normal text-slate-500">min. {medication.minimumStock}</span></td><td className="px-6 py-5 whitespace-nowrap text-slate-700">{new Date(medication.expirationDate + 'T00:00:00').toLocaleDateString('en-US')}</td><td className="px-6 py-5"><div className="flex flex-wrap gap-2">{statuses.map((status) => <span key={status} className={'inline-flex px-3 py-1.5 rounded-full text-xs font-bold ring-1 ' + statusStyles[status]}>{status}</span>)}</div></td><td className="px-6 py-5"><div className="flex justify-end gap-1"><Button size="sm" variant="secondary" aria-label={'Add stock to ' + medication.name} title="Add stock" onClick={() => setMovement({ medication, type: 'add' })}><ArrowUpCircle className="h-4 w-4" /></Button><Button size="sm" variant="secondary" aria-label={'Remove stock from ' + medication.name} title="Remove stock" onClick={() => setMovement({ medication, type: 'remove' })}><ArrowDownCircle className="h-4 w-4" /></Button><Button size="sm" variant="ghost" aria-label={'Edit ' + medication.name} title="Edit medication" onClick={() => onEdit(medication)}><Edit3 className="h-4 w-4" /></Button><Button size="sm" variant="ghost" aria-label={'Delete ' + medication.name} title="Delete medication" className="text-slate-900 hover:text-slate-700" onClick={() => onDelete(medication.id)}><Trash2 className="h-4 w-4" /></Button></div></td></tr>; })}</tbody></table></div>{filteredMedications.length === 0 && <div className="px-6 py-20 text-center text-slate-500"><div className="h-14 w-14 mx-auto mb-4 rounded-2xl bg-white/35 flex items-center justify-center"><Search className="h-7 w-7 text-slate-400" /></div><p className="font-display font-extrabold text-slate-800">No medications found</p><p className="text-sm mt-1">{emptyStateHint}</p></div>}</CardContent>
-    <Modal isOpen={Boolean(movement)} onClose={closeMovement} title={movement?.type === 'add' ? 'Add stock' : 'Remove stock'}><form onSubmit={submitMovement} className="space-y-5"><p className="text-slate-600">Update stock for <strong>{movement?.medication.name}</strong>.</p><Input id="movement-amount" label="Quantity" type="number" min="1" step="1" value={amount} onChange={(event) => setAmount(event.target.value)} required /><div className="flex justify-end gap-3"><Button type="button" variant="ghost" onClick={closeMovement}>Cancel</Button><Button type="submit">{movement?.type === 'add' ? 'Add units' : 'Remove units'}</Button></div></form></Modal>
-  </Card>;
+
+  return (
+    <div className="inventory-panel">
+      <div className="inventory-heading">
+        <div className="section-title">
+          <h2>Your stock</h2>
+        </div>
+      </div>
+
+      <div className="inventory-toolbar">
+        <div className="search-field">
+          <Search size={18} aria-hidden="true" />
+          <Input
+            aria-label="Search medications"
+            placeholder="Search name, batch or manufacturer…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          {query && (
+            <button
+              type="button"
+              className="clear-search"
+              aria-label="Clear search"
+              onClick={() => {
+                setQuery('');
+                document.querySelector<HTMLInputElement>('[aria-label="Search medications"]')?.focus();
+              }}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+
+        <label className="sort-control">
+          Sort by
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as 'name' | 'expiration' | 'quantity')}
+            aria-label="Sort inventory"
+          >
+            <option value="name">Name A–Z</option>
+            <option value="expiration">Soonest expiration</option>
+            <option value="quantity">Lowest stock</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="filter-list" role="group" aria-label="Filter by status">
+        {filterOptions.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            aria-pressed={filter === item.value}
+            onClick={() => onFilter(item.value)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="inventory-scroll" tabIndex={0} role="region" aria-label="Medication inventory table">
+        <table className="inventory-table">
+          <caption className="sr-only">
+            Medication batches, quantities, expiration dates and available actions
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Medication</th>
+              <th scope="col">Batch</th>
+              <th scope="col">Stock level</th>
+              <th scope="col">Expiration</th>
+              <th scope="col">Status</th>
+              <th scope="col" className="actions-heading">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredMedications.map((medication) => (
+              <tr key={medication.id}>
+                <td>
+                  <div className="medication-cell">
+                    <span className="medication-icon" aria-hidden="true">
+                      <Pill size={19} strokeWidth={1.8} />
+                    </span>
+                    <div>
+                      <strong>{medication.name}</strong>
+                      <span className="cell-secondary">{medication.manufacturer}</span>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Batch">
+                  <span className="batch-label">{medication.batch}</span>
+                </td>
+                <td data-label="Stock">
+                  <div className="stock-value">
+                    <strong>{medication.quantity.toLocaleString('en-US')}</strong>
+                    <span>units</span>
+                  </div>
+                  <span className="cell-secondary">Minimum {medication.minimumStock}</span>
+                </td>
+                <td data-label="Expiration" className="expiry-cell">
+                  {new Date(medication.expirationDate + 'T00:00:00').toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </td>
+                <td data-label="Status">
+                  <div className="status-list">
+                    {getMedicationCategories(medication).map((status) => {
+                      const StatusIcon = statuses[status].icon;
+                      return (
+                        <span key={status} className={`status-badge status-${statuses[status].tone}`}>
+                          <StatusIcon size={13} strokeWidth={1.8} aria-hidden="true" />
+                          {statuses[status].label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </td>
+                <td className="actions-cell">
+                  <div className="row-actions">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      aria-label={'Add stock to ' + medication.name}
+                      title="Add stock"
+                      onClick={() => setMovement({ medication, type: 'add' })}
+                    >
+                      <Plus size={15} aria-hidden="true" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={medication.quantity === 0}
+                      aria-label={'Remove stock from ' + medication.name}
+                      title="Remove stock"
+                      onClick={() => setMovement({ medication, type: 'remove' })}
+                    >
+                      <Minus size={15} aria-hidden="true" />
+                    </Button>
+                    <span className="action-divider" aria-hidden="true" />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label={'Edit ' + medication.name}
+                      title="Edit medication"
+                      onClick={() => onEdit(medication)}
+                    >
+                      <Edit3 size={16} aria-hidden="true" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label={'Delete ' + medication.name}
+                      title="Delete medication"
+                      className="delete-action"
+                      onClick={() => onDelete(medication.id)}
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {!filteredMedications.length && (
+        <div className="empty-state">
+          <span className={`empty-icon ${medications.length ? '' : 'empty-brand'}`}>
+            {medications.length ? (
+              <Search size={29} strokeWidth={1.5} aria-hidden="true" />
+            ) : (
+              <img src="/inventory-symbol.svg" alt="" width="64" height="64" />
+            )}
+          </span>
+          <h3>{medications.length ? 'No matching medications' : 'A fresh start for your stock'}</h3>
+          <p>
+            {medications.length
+              ? 'Try another search or clear your filters to see all medications.'
+              : 'Register your first medication with its batch, quantity and expiration date.'}
+          </p>
+          {medications.length ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setQuery('');
+                onFilter('all');
+              }}
+            >
+              Clear search & filters
+            </Button>
+          ) : (
+            <Button icon={Plus} onClick={onCreate}>
+              Add your first medication
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="table-footer">
+        <span role="status">
+          {query || filter !== 'all' ? (
+            <>
+              <strong>{filteredMedications.length}</strong> of {medications.length} batches
+            </>
+          ) : (
+            <>
+              <strong>{medications.length}</strong> {medications.length === 1 ? 'batch' : 'batches'}
+            </>
+          )}
+        </span>
+        <span>Expiration alerts: 30-day window</span>
+      </div>
+
+      <Modal
+        isOpen={Boolean(movement)}
+        onClose={closeMovement}
+        title={movement?.type === 'add' ? 'Add stock' : 'Remove stock'}
+        description="Enter the number of units to adjust."
+      >
+        <form onSubmit={submitMovement} className="space-y-5">
+          <div className="movement-summary">
+            <Pill size={22} aria-hidden="true" />
+            <div>
+              <strong>{movement?.medication.name}</strong>
+              <span className="cell-secondary">
+                {movement?.medication.quantity} units available · Batch {movement?.medication.batch}
+              </span>
+            </div>
+          </div>
+          <Input
+            id="movement-amount"
+            label="Quantity"
+            type="number"
+            min="1"
+            max={movement?.type === 'remove' ? movement.medication.quantity : undefined}
+            step="1"
+            value={amount}
+            onChange={(event) => {
+              setAmount(event.target.value);
+              setMovementError('');
+            }}
+            error={movementError}
+            required
+            autoFocus
+          />
+          <p className="movement-preview" aria-live="polite">
+            {Number.isInteger(Number(amount)) &&
+            Number(amount) > 0 &&
+            movement &&
+            (movement.type === 'add' || Number(amount) <= movement.medication.quantity) ? (
+              <>
+                <span>Stock after adjustment</span>
+                <span className="movement-result">
+                  <strong>
+                    {(
+                      movement.medication.quantity +
+                      (movement.type === 'add' ? Number(amount) : -Number(amount))
+                    ).toLocaleString('en-US')}{' '}
+                    units
+                  </strong>
+                  {movement.type === 'remove' &&
+                    movement.medication.quantity - Number(amount) <= movement.medication.minimumStock && (
+                      <span className="movement-warning">
+                        {movement.medication.quantity - Number(amount) === 0
+                          ? ' · Depleted'
+                          : ' · Low stock'}
+                      </span>
+                    )}
+                </span>
+              </>
+            ) : (
+              'Enter a valid quantity to preview the new stock.'
+            )}
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={closeMovement}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {movement?.type === 'add' ? 'Add units' : 'Remove units'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
 }
