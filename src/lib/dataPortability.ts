@@ -1,4 +1,5 @@
 import type { Medication } from "../types";
+import { MAX_STOCK_LIMIT } from "./medications";
 import { isMedication } from "./storage";
 
 export const BACKUP_SCHEMA_VERSION = 1;
@@ -134,6 +135,22 @@ export function parseBackupJson(rawJson: string): BackupParseResult {
       success: false,
       error:
         "Invalid backup file: one or more medication records are invalid or corrupted.",
+    };
+  }
+
+  const allStockValuesWithinLimit = medications.every((medication) => {
+    const { quantity, minimumStock } = medication as Medication;
+    return (
+      Number.isSafeInteger(quantity) &&
+      quantity <= MAX_STOCK_LIMIT &&
+      Number.isSafeInteger(minimumStock) &&
+      minimumStock <= MAX_STOCK_LIMIT
+    );
+  });
+  if (!allStockValuesWithinLimit) {
+    return {
+      success: false,
+      error: "Invalid backup file: stock values exceed the supported safe-integer limit.",
     };
   }
 
