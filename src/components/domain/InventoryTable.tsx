@@ -4,12 +4,14 @@ import {
   CircleCheck,
   CircleX,
   Clock3,
+  Download,
   Edit3,
   Minus,
   Pill,
   Plus,
   Search,
   Trash2,
+  Upload,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -31,6 +33,8 @@ export interface InventoryTableProps {
   onRemoveQuantity: (id: string, amount: number) => boolean;
   onEdit: (medication: Medication) => void;
   onDelete: (id: string) => void;
+  onSaveBackup: () => void;
+  onUploadBackup: () => void;
 }
 
 const statuses: Record<
@@ -61,6 +65,8 @@ export function InventoryTable({
   onRemoveQuantity,
   onEdit,
   onDelete,
+  onSaveBackup,
+  onUploadBackup,
 }: InventoryTableProps) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"name" | "expiration" | "quantity">("name");
@@ -137,6 +143,24 @@ export function InventoryTable({
       <div className="inventory-heading">
         <div className="section-title">
           <h2>Your stock</h2>
+        </div>
+        <div className="inventory-heading-actions" aria-label="Backup actions">
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={Download}
+            onClick={onSaveBackup}
+          >
+            Save backup
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={Upload}
+            onClick={onUploadBackup}
+          >
+            Upload backup
+          </Button>
         </div>
       </div>
 

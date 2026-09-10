@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   CircleCheck,
-  Download,
   HardDrive,
   Moon,
   Plus,
   Sun,
-  Upload,
   X,
 } from "lucide-react";
 import { useTheme } from "./hooks/useTheme";
@@ -324,40 +322,25 @@ function App() {
             onRemoveQuantity={handleRemoveQuantity}
             onEdit={setEditingMedication}
             onDelete={setDeletingMedicationId}
+            onSaveBackup={handleSaveBackup}
+            onUploadBackup={handleTriggerRestore}
           />
         </section>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          className="sr-only"
+          onChange={handleFileChange}
+          aria-label="Upload backup JSON file"
+        />
 
         <footer className="app-footer">
           <span className="app-footer-notice">
             <HardDrive size={14} aria-hidden="true" /> Stored on this device, in
             this browser.
           </span>
-          <div className="app-footer-actions">
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={Download}
-              onClick={handleSaveBackup}
-            >
-              Save backup
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={Upload}
-              onClick={handleTriggerRestore}
-            >
-              Upload backup
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              className="sr-only"
-              onChange={handleFileChange}
-              aria-label="Upload backup JSON file"
-            />
-          </div>
         </footer>
       </main>
 
