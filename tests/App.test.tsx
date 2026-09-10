@@ -201,7 +201,9 @@ describe("Data Portability (Export, Backup & Restore)", () => {
         ),
       ).toBeTruthy();
     });
-    expect(screen.getByRole("dialog", { name: "Restore backup?" })).toBeTruthy();
+    expect(
+      screen.getByRole("dialog", { name: "Restore backup?" }),
+    ).toBeTruthy();
     expect(screen.getByText("Paracetamol")).toBeTruthy();
     expect(screen.queryByText("Aspirin")).toBeNull();
 
