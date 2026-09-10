@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   CircleCheck,
@@ -7,19 +7,22 @@ import {
   Plus,
   Sun,
   X,
-} from 'lucide-react';
-import { useTheme } from './hooks/useTheme';
-import { useInventory } from './hooks/useInventory';
-import { Button } from './components/ui/Button';
-import { Modal } from './components/ui/Modal';
-import { DashboardStats } from './components/domain/DashboardStats';
-import { InventoryTable, type InventoryFilter } from './components/domain/InventoryTable';
-import { MedicationForm } from './components/domain/MedicationForm';
-import type { Medication } from './types';
+} from "lucide-react";
+import { useTheme } from "./hooks/useTheme";
+import { useInventory } from "./hooks/useInventory";
+import { Button } from "./components/ui/Button";
+import { Modal } from "./components/ui/Modal";
+import { DashboardStats } from "./components/domain/DashboardStats";
+import {
+  InventoryTable,
+  type InventoryFilter,
+} from "./components/domain/InventoryTable";
+import { MedicationForm } from "./components/domain/MedicationForm";
+import type { Medication } from "./types";
 
 interface Notice {
   message: string;
-  type: 'success' | 'error';
+  type: "success" | "error";
 }
 
 function App() {
@@ -35,9 +38,13 @@ function App() {
 
   const [notice, setNotice] = useState<Notice | null>(null);
   const [isCreateOpen, setCreateOpen] = useState(false);
-  const [editingMedication, setEditingMedication] = useState<Medication | undefined>();
-  const [deletingMedicationId, setDeletingMedicationId] = useState<string | undefined>();
-  const [filter, setFilter] = useState<InventoryFilter>('all');
+  const [editingMedication, setEditingMedication] = useState<
+    Medication | undefined
+  >();
+  const [deletingMedicationId, setDeletingMedicationId] = useState<
+    string | undefined
+  >();
+  const [filter, setFilter] = useState<InventoryFilter>("all");
 
   useEffect(() => {
     if (!notice) return;
@@ -45,7 +52,9 @@ function App() {
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
-  const deletingMedication = medications.find(({ id }) => id === deletingMedicationId);
+  const deletingMedication = medications.find(
+    ({ id }) => id === deletingMedicationId,
+  );
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const closeModal = () => {
@@ -53,7 +62,7 @@ function App() {
     setEditingMedication(undefined);
   };
 
-  const saveMedication = (data: Omit<Medication, 'id'>): boolean => {
+  const saveMedication = (data: Omit<Medication, "id">): boolean => {
     const isEdit = Boolean(editingMedication);
     const success = editingMedication
       ? updateMedication(editingMedication.id, data)
@@ -61,15 +70,18 @@ function App() {
 
     if (success) {
       setNotice({
-        message: isEdit ? `${data.name} updated.` : `${data.name} added to inventory.`,
-        type: 'success',
+        message: isEdit
+          ? `${data.name} updated.`
+          : `${data.name} added to inventory.`,
+        type: "success",
       });
       closeModal();
       return true;
     } else {
       setNotice({
-        message: 'Storage failure: could not save medication to your browser storage.',
-        type: 'error',
+        message:
+          "Storage failure: could not save medication to your browser storage.",
+        type: "error",
       });
       return false;
     }
@@ -82,21 +94,23 @@ function App() {
 
   const confirmDelete = (): boolean => {
     if (deletingMedicationId) {
-      const name = deletingMedication?.name ?? 'Medication';
+      const name = deletingMedication?.name ?? "Medication";
       const success = deleteMedication(deletingMedicationId);
       if (success) {
         setNotice({
           message: `${name} deleted from inventory.`,
-          type: 'success',
+          type: "success",
         });
         closeDeleteModal();
         return true;
       } else {
         setNotice({
-          message: 'Storage failure: could not remove medication from storage.',
-          type: 'error',
+          message: "Storage failure: could not remove medication from storage.",
+          type: "error",
         });
-        setDeleteError('Storage failure: could not remove medication from storage.');
+        setDeleteError(
+          "Storage failure: could not remove medication from storage.",
+        );
         return false;
       }
     }
@@ -107,13 +121,14 @@ function App() {
     const success = addQuantity(id, amount);
     if (success) {
       setNotice({
-        message: `${amount} ${amount === 1 ? 'unit' : 'units'} added to stock.`,
-        type: 'success',
+        message: `${amount} ${amount === 1 ? "unit" : "units"} added to stock.`,
+        type: "success",
       });
     } else {
       setNotice({
-        message: 'Storage failure: stock change could not be saved to local storage.',
-        type: 'error',
+        message:
+          "Storage failure: stock change could not be saved to local storage.",
+        type: "error",
       });
     }
     return success;
@@ -123,13 +138,14 @@ function App() {
     const success = removeQuantity(id, amount);
     if (success) {
       setNotice({
-        message: `${amount} ${amount === 1 ? 'unit' : 'units'} removed from stock.`,
-        type: 'success',
+        message: `${amount} ${amount === 1 ? "unit" : "units"} removed from stock.`,
+        type: "success",
       });
     } else {
       setNotice({
-        message: 'Storage failure: stock change could not be saved to local storage.',
-        type: 'error',
+        message:
+          "Storage failure: stock change could not be saved to local storage.",
+        type: "error",
       });
     }
     return success;
@@ -143,7 +159,11 @@ function App() {
 
       <header className="app-header">
         <div className="page-width header-inner">
-          <a className="brand" href="#main" aria-label="Medication Inventory home">
+          <a
+            className="brand"
+            href="#main"
+            aria-label="Medication Inventory home"
+          >
             <img
               className="brand-symbol"
               src="/inventory-symbol.svg"
@@ -153,7 +173,9 @@ function App() {
             />
             <span>
               Medication
-              <span className="brand-subtitle">A little order. Better care.</span>
+              <span className="brand-subtitle">
+                A little order. Better care.
+              </span>
             </span>
           </a>
 
@@ -161,17 +183,21 @@ function App() {
             type="button"
             className="theme-toggle"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
+            title={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
           >
             <span className="theme-toggle-icon">
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Sun size={18} aria-hidden="true" />
               ) : (
                 <Moon size={18} aria-hidden="true" />
               )}
             </span>
-            <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+            <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
           </button>
         </div>
       </header>
@@ -212,17 +238,23 @@ function App() {
 
         <footer className="app-footer">
           <span>
-            <HardDrive size={14} aria-hidden="true" /> Stored on this device, in this browser.
+            <HardDrive size={14} aria-hidden="true" /> Stored on this device, in
+            this browser.
           </span>
         </footer>
       </main>
 
-      <div className="notification-region" role="status" aria-live="polite" aria-atomic="true">
+      <div
+        className="notification-region"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {notice && (
           <div
-            className={`notification ${notice.type === 'error' ? 'notification-error' : ''}`}
+            className={`notification ${notice.type === "error" ? "notification-error" : ""}`}
           >
-            {notice.type === 'error' ? (
+            {notice.type === "error" ? (
               <AlertTriangle size={20} aria-hidden="true" />
             ) : (
               <CircleCheck size={20} aria-hidden="true" />
@@ -242,7 +274,7 @@ function App() {
       <Modal
         isOpen={isCreateOpen || Boolean(editingMedication)}
         onClose={closeModal}
-        title={editingMedication ? 'Edit medication' : 'Add medication'}
+        title={editingMedication ? "Edit medication" : "Add medication"}
         description="Medication details and stock thresholds. Required fields are marked *."
       >
         <MedicationForm
@@ -259,11 +291,15 @@ function App() {
         description="This action cannot be undone."
       >
         <p className="delete-description">
-          Remove <strong className="delete-name">{deletingMedication?.name}</strong> and its stock
-          details from your inventory?
+          Remove{" "}
+          <strong className="delete-name">{deletingMedication?.name}</strong>{" "}
+          and its stock details from your inventory?
         </p>
         {deleteError && (
-          <p className="mt-3 text-xs text-red-600 dark:text-red-400 font-medium" role="alert">
+          <p
+            className="mt-3 text-xs text-red-600 dark:text-red-400 font-medium"
+            role="alert"
+          >
             {deleteError}
           </p>
         )}

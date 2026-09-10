@@ -1,7 +1,7 @@
-import { useEffect, useId, useRef } from 'react';
-import { X } from 'lucide-react';
-import { createPortal } from 'react-dom';
-import { Button } from './Button';
+import { useEffect, useId, useRef } from "react";
+import { X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Button } from "./Button";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -11,7 +11,13 @@ export interface ModalProps {
   children: React.ReactNode;
 }
 
-export function Modal({ isOpen, onClose, title, description, children }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+}: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -26,18 +32,18 @@ export function Modal({ isOpen, onClose, title, description, children }: ModalPr
 
     const previousFocus = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     // Focus the modal panel
     dialogRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         event.preventDefault();
         closeRef.current();
         return;
       }
-      if (event.key !== 'Tab') return;
+      if (event.key !== "Tab") return;
 
       const elements = Array.from(
         dialogRef.current?.querySelectorAll<HTMLElement>(
@@ -53,18 +59,26 @@ export function Modal({ isOpen, onClose, title, description, children }: ModalPr
         return;
       }
 
-      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+      if (
+        event.shiftKey &&
+        (document.activeElement === first ||
+          document.activeElement === dialogRef.current)
+      ) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) {
+      } else if (
+        !event.shiftKey &&
+        (document.activeElement === last ||
+          document.activeElement === dialogRef.current)
+      ) {
         event.preventDefault();
         first.focus();
       }
     };
 
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
       previousFocus?.focus();
     };
