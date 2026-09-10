@@ -24,8 +24,8 @@
   <img src="https://img.shields.io/badge/React-19-17685b?style=flat-square&logo=react&logoColor=white" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.9" />
   <img src="https://img.shields.io/badge/Vite-7-646cff?style=flat-square&logo=vite&logoColor=white" alt="Vite 7" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-17685b?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 3.4" />
-  <img src="https://img.shields.io/badge/Vitest-3-6e9f18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest 3" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4.3-17685b?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4.3" />
+  <img src="https://img.shields.io/badge/Vitest-4-6e9f18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest 4" />
 </p>
 
 <p align="center">
@@ -112,15 +112,15 @@ src/
 
 ## Tech Stack
 
-| Area | Technologies |
-| --- | --- |
-| Frontend | React 19, TypeScript 5.9 |
-| Styling | Tailwind CSS 3.4, Custom CSS Tokens (Teal theme) |
-| Icons | Lucide React |
-| Tooling | Vite 7 |
-| Testing | Vitest 3 |
-| Linting | ESLint 9 |
-| CI | GitHub Actions |
+| Area     | Technologies                                     |
+| -------- | ------------------------------------------------ |
+| Frontend | React 19, TypeScript 5.9                         |
+| Styling  | Tailwind CSS 4.3, Custom CSS Tokens (Teal theme) |
+| Icons    | Lucide React                                     |
+| Tooling  | Vite 7                                           |
+| Testing  | Vitest 4, Playwright                             |
+| Linting  | ESLint 10                                        |
+| CI       | GitHub Actions                                   |
 
 ---
 
@@ -160,16 +160,25 @@ Run the automated test suite, type-checking, and lint checks:
 
 ```bash
 # Run unit and boundary tests
-npm test -- --run
+npm test
+
+# Check types
+npm run typecheck
 
 # Run ESLint
 npm run lint
+
+# Check formatting
+npm run format:check
+
+# Run Playwright end-to-end tests
+npm run test:e2e
 
 # Build production bundle
 npm run build
 ```
 
-The automated checks cover deterministic inventory rules, linting, and production build validation. The **Publish Showcase** GitHub Actions workflow regenerates the canonical video, hero screenshot, and short README GIF preview when product/showcase inputs change, and can also be run manually; those stable media paths are reused by the project README, profile, and portfolio.
+The automated CI pipeline enforces quality checks on Node.js 22.x, covering security audits, formatting, linting, TypeScript compilation (`tsc -b`), Vitest unit tests, production build validation, and Playwright Chromium E2E testing. The **Publish Showcase** GitHub Actions workflow regenerates the canonical video, hero screenshot, and short README GIF preview when product/showcase inputs change, and can also be run manually; those stable media paths are reused by the project README, profile, and portfolio.
 
 ### Negative QA Scripts
 
