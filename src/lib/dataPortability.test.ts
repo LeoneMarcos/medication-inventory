@@ -180,9 +180,7 @@ describe("parseBackupJson", () => {
       const json = JSON.stringify({
         schemaVersion: 1,
         exportedAt: new Date().toISOString(),
-        medications: [
-          { ...sampleMedication1, [field]: MAX_STOCK_LIMIT + 1 },
-        ],
+        medications: [{ ...sampleMedication1, [field]: MAX_STOCK_LIMIT + 1 }],
       });
 
       const result = parseBackupJson(json);
