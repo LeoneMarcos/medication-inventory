@@ -21,21 +21,17 @@ test("opens the medication creation flow", async ({ page }) => {
   ).toBeHidden();
 });
 
-test("exports inventory as CSV and JSON backup", async ({ page }) => {
+test("saves inventory as JSON backup and hides Export CSV", async ({
+  page,
+}) => {
   await page.goto("/");
 
-  // Trigger CSV export
-  const downloadCsvPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export CSV" }).click();
-  const csvDownload = await downloadCsvPromise;
-  expect(csvDownload.suggestedFilename()).toMatch(
-    /medication-inventory-.*\.csv/,
-  );
-  await expect(page.getByText("Inventory exported to CSV.")).toBeVisible();
+  // Verify Export CSV is not in the visible UI
+  await expect(page.getByRole("button", { name: "Export CSV" })).toBeHidden();
 
-  // Trigger Backup download
+  // Trigger Backup download via Save backup
   const downloadJsonPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download backup" }).click();
+  await page.getByRole("button", { name: "Save backup" }).click();
   const jsonDownload = await downloadJsonPromise;
   expect(jsonDownload.suggestedFilename()).toMatch(
     /medication-inventory-backup-.*\.json/,

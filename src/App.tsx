@@ -2,13 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   CircleCheck,
-  FileJson,
-  FileSpreadsheet,
   HardDrive,
   Moon,
   Plus,
   Sun,
-  Upload,
   X,
 } from "lucide-react";
 import { useTheme } from "./hooks/useTheme";
@@ -24,7 +21,6 @@ import { MedicationForm } from "./components/domain/MedicationForm";
 import {
   downloadFile,
   exportBackupJson,
-  exportInventoryCsv,
   parseBackupJson,
 } from "./lib/dataPortability";
 import type { Medication } from "./types";
@@ -165,17 +161,7 @@ function App() {
     return success;
   };
 
-  const handleExportCsv = () => {
-    const csv = exportInventoryCsv(medications);
-    const dateStr = new Date().toISOString().split("T")[0];
-    downloadFile(`medication-inventory-${dateStr}.csv`, csv, "text/csv");
-    setNotice({
-      message: "Inventory exported to CSV.",
-      type: "success",
-    });
-  };
-
-  const handleDownloadBackup = () => {
+  const handleSaveBackup = () => {
     const json = exportBackupJson(medications);
     const dateStr = new Date().toISOString().split("T")[0];
     downloadFile(
@@ -336,48 +322,25 @@ function App() {
             onRemoveQuantity={handleRemoveQuantity}
             onEdit={setEditingMedication}
             onDelete={setDeletingMedicationId}
+            onSaveBackup={handleSaveBackup}
+            onUploadBackup={handleTriggerRestore}
           />
         </section>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          className="sr-only"
+          onChange={handleFileChange}
+          aria-label="Upload backup JSON file"
+        />
 
         <footer className="app-footer">
           <span className="app-footer-notice">
             <HardDrive size={14} aria-hidden="true" /> Stored on this device, in
             this browser.
           </span>
-          <div className="app-footer-actions">
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={FileSpreadsheet}
-              onClick={handleExportCsv}
-            >
-              Export CSV
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={FileJson}
-              onClick={handleDownloadBackup}
-            >
-              Download backup
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={Upload}
-              onClick={handleTriggerRestore}
-            >
-              Restore backup
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              className="sr-only"
-              onChange={handleFileChange}
-              aria-label="Upload backup JSON file"
-            />
-          </div>
         </footer>
       </main>
 

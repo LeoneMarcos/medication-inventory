@@ -114,6 +114,24 @@ describe("parseBackupJson", () => {
     }
   });
 
+  it("performs lossless export -> parse round-trip for multiple medications and empty list", () => {
+    const originalList = [sampleMedication1, sampleMedication2];
+    const jsonStr = exportBackupJson(originalList);
+    const parseResult = parseBackupJson(jsonStr);
+
+    expect(parseResult.success).toBe(true);
+    if (parseResult.success) {
+      expect(parseResult.medications).toEqual(originalList);
+    }
+
+    const emptyJsonStr = exportBackupJson([]);
+    const emptyParseResult = parseBackupJson(emptyJsonStr);
+    expect(emptyParseResult.success).toBe(true);
+    if (emptyParseResult.success) {
+      expect(emptyParseResult.medications).toEqual([]);
+    }
+  });
+
   it("rejects invalid JSON", () => {
     const result = parseBackupJson("{ invalid json");
     expect(result.success).toBe(false);
