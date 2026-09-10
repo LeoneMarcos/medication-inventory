@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   AlertTriangle,
-  ArrowRight,
   CircleCheck,
   HardDrive,
   Moon,
@@ -16,7 +15,6 @@ import { Modal } from './components/ui/Modal';
 import { DashboardStats } from './components/domain/DashboardStats';
 import { InventoryTable, type InventoryFilter } from './components/domain/InventoryTable';
 import { MedicationForm } from './components/domain/MedicationForm';
-import { getMedicationFlags } from './lib/medications';
 import type { Medication } from './types';
 
 interface Notice {
@@ -47,12 +45,7 @@ function App() {
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
-
   const deletingMedication = medications.find(({ id }) => id === deletingMedicationId);
-  const attentionCount = medications.filter(
-    (medication) => !getMedicationFlags(medication).isHealthy,
-  ).length;
-
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const closeModal = () => {
@@ -186,9 +179,6 @@ function App() {
       <main id="main" className="page-width main-content">
         <section className="page-heading">
           <div>
-            <span className="eyebrow heading-eyebrow">
-              <span aria-hidden="true" /> YOUR DAILY OVERVIEW
-            </span>
             <h1>Stock, thoughtfully organized.</h1>
             <p className="page-description">
               Stay on top of quantities, batches and expiration dates.
@@ -206,33 +196,6 @@ function App() {
             onFilter={(nextFilter) => setFilter(nextFilter)}
           />
         </section>
-
-        {attentionCount > 0 && (
-          <section className="attention-banner needs-attention" aria-label="Inventory alerts">
-            <AlertTriangle size={18} className="attention-icon" aria-hidden="true" />
-            <div>
-              <strong>
-                {attentionCount} {attentionCount === 1 ? 'medication needs' : 'medications need'} attention
-              </strong>
-              <p>Low stock, expiring soon or past expiration.</p>
-            </div>
-            <button
-              type="button"
-              className="text-action"
-              onClick={() => {
-                setFilter('attention');
-                document.getElementById('inventory')?.scrollIntoView({
-                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                    ? 'instant'
-                    : 'smooth',
-                  block: 'start',
-                });
-              }}
-            >
-              Review <ArrowRight size={15} aria-hidden="true" />
-            </button>
-          </section>
-        )}
 
         <section id="inventory" className="inventory-section">
           <InventoryTable
