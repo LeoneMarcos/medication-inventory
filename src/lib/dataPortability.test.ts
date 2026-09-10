@@ -46,6 +46,39 @@ describe("exportInventoryCsv", () => {
     expect(csv).toContain('"BATCH-002\nLine2"');
     expect(csv).toContain('"Generic Lab, Inc."');
   });
+
+  it.each(["=FORMULA()", "+FORMULA()", "-FORMULA()", "@FORMULA()"])(
+    "neutralizes formula-leading text fields (%s)",
+    (formula) => {
+      const csv = exportInventoryCsv([
+        {
+          ...sampleMedication1,
+          name: formula,
+          batch: formula,
+          manufacturer: formula,
+        },
+      ]);
+
+      expect(csv.split("\n")[1]).toBe(
+        [
+          `'${formula}`,
+          `'${formula}`,
+          `'${formula}`,
+          "50",
+          "10",
+          "2027-06-30",
+        ].join(","),
+      );
+    },
+  );
+
+  it("applies CSV escaping after neutralizing a formula-leading field", () => {
+    const csv = exportInventoryCsv([
+      { ...sampleMedication1, name: '=HYPERLINK("https://example.com", "x")' },
+    ]);
+
+    expect(csv).toContain('"\'=HYPERLINK(""https://example.com"", ""x"")"');
+  });
 });
 
 describe("exportBackupJson", () => {
@@ -138,6 +171,23 @@ describe("parseBackupJson", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error).toContain("invalid or corrupted");
+    }
+  });
+
+  it("rejects a backup containing duplicate medication IDs", () => {
+    const json = JSON.stringify({
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      medications: [
+        sampleMedication1,
+        { ...sampleMedication2, id: sampleMedication1.id },
+      ],
+    });
+
+    const result = parseBackupJson(json);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("medication IDs must be unique");
     }
   });
 });
