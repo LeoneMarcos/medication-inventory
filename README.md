@@ -71,7 +71,7 @@ The animated preview shows a short excerpt of the canonical showcase. Open the f
 - **Status filters** — Narrow the inventory to needs attention, healthy, low stock, expiring soon, or expired records without duplicating the dashboard summary.
 - **Batches & expiration control** — Strict date validation preventing invalid calendar dates and retaining proper records.
 - **Safe stock adjustments** — Add or remove units with a live post-adjustment balance preview and bounds checks preventing negative stock.
-- **Data portability** — Export inventory to spreadsheet-safe CSV, download versioned JSON backups, and restore validated backups only after explicit confirmation.
+- **Data portability** — Download versioned JSON backups and restore validated backups only after explicit confirmation.
 - **Faceted search & sorting** — Search by medication name, active ingredient, batch number, or manufacturer, with sorting by Name, Expiration, or Quantity.
 - **Light & dark themes** — Built-in theme switcher with flash-free initial hydration and system color scheme detection.
 - **Accessible & compliant** — Full keyboard trap in modals, ARIA labels, live status regions, and `prefers-reduced-motion` respect.
@@ -91,7 +91,7 @@ src/
 │   ├── useInventory.ts   # Inventory state management and safe persistence boundary
 │   └── useTheme.ts       # Light/Dark mode state and DOM synchronization
 ├── lib/
-│   ├── dataPortability.ts # CSV export and versioned JSON backup/restore validation
+│   ├── dataPortability.ts # Versioned JSON backup/restore validation and CSV serialization
 │   ├── inventory.ts      # Filtering and search predicates
 │   ├── medications.ts    # Domain logic (status calculation, stock math, date parsers)
 │   ├── metrics.ts        # Dashboard statistics calculation
@@ -194,11 +194,8 @@ The automated CI pipeline enforces quality checks on Node.js 22.x, covering secu
 
 ## Documentation
 
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — System architecture and component contracts.
 - [`DESIGN.md`](DESIGN.md) — Visual tokens, layout specifications, and interaction states.
-- [`PRODUCT.md`](PRODUCT.md) — Product definition and requirements.
 - [`STACK.md`](STACK.md) — Technology stack constraints and rules.
-- [`TEST_PLAN.md`](TEST_PLAN.md) — Comprehensive verification strategy.
 - [`docs/STATUS.md`](docs/STATUS.md) — Status log and release evidence.
 
 ---
