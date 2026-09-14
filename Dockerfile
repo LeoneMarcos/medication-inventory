@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Production runtime stage
-FROM nginx:1.27-alpine
+FROM nginx:1.30.4-alpine
 
 # Clean default nginx static files
 RUN rm -rf /usr/share/nginx/html/*

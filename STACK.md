@@ -29,7 +29,7 @@ The project must provide a responsive inventory dashboard with deterministic med
 | E2E Testing | Playwright & `@playwright/test` `1.63.0`                                      | End-to-end browser automation (Chromium)                |
 | Quality     | ESLint `10.10.0` / `@eslint/js` `10.0.1`, Prettier `3.9.6`                    | Static checks and formatting                            |
 | Hosting     | Cloudflare static assets via `wrangler.jsonc`                                 | Production delivery                                     |
-| Container   | Docker `node:22-alpine` + `nginx:1.27-alpine`                                 | Optional reproducible container preview & packaging     |
+| Container   | Docker `node:22-alpine` + `nginx:1.30.4-alpine`                                | Optional reproducible container preview & packaging     |
 | CI/CD       | GitHub Actions (Node.js 22.x)                                                 | Automated verification pipeline                         |
 
 ## 3. Runtime and packages
@@ -48,7 +48,7 @@ Browser `localStorage` is the only persistence boundary. Stored JSON is untruste
 
 `vite build` emits `dist`; `wrangler.jsonc` points static asset delivery at that directory. The known public demo is `https://inventory.leonemarcos.com/`. Production crawler files are emitted from `public/`: `robots.txt`, `sitemap.xml`, `llms.txt`, and `_headers`. The repository does not deploy from CI in this checkout; deployment ownership remains the configured Cloudflare project.
 
-For optional local container execution and preview, a multi-stage `Dockerfile` (`node:22-alpine` builder and pinned `nginx:1.27-alpine` runtime) serves the production static bundle with a production-oriented `nginx.conf` (SPA fallback, baseline security headers, and asset caching). Orchestration is provided via `compose.yaml` (port 8081). Cloudflare static assets remains the canonical production deployment target.
+For optional local container execution and preview, a multi-stage `Dockerfile` (`node:22-alpine` builder and pinned `nginx:1.30.4-alpine` runtime) serves the production static bundle with a production-oriented `nginx.conf` (SPA fallback, baseline security headers, and asset caching). Orchestration is provided via `compose.yaml` (port 8081). Cloudflare static assets remains the canonical production deployment target.
 
 ## 7. Testing and quality
 
