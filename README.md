@@ -123,6 +123,7 @@ src/
 | Tooling  | Vite 7                                           |
 | Testing  | Vitest 4, Playwright                             |
 | Linting  | ESLint 10                                        |
+| Container| Docker `node:22-alpine` + `nginx:1.30.4-alpine` (optional preview/packaging) |
 | CI       | GitHub Actions                                   |
 
 ---
@@ -154,6 +155,28 @@ npm run dev
 ```
 
 Open the local server URL printed by Vite (typically `http://localhost:5173`).
+
+---
+
+### Running with Docker
+
+As an optional reproducible local preview and container packaging path (canonical production deployment remains Cloudflare static delivery), you can run the application in an isolated, production-oriented Nginx (`nginx:1.30.4-alpine`) container with baseline security headers:
+
+```bash
+# Using Docker Compose (Recommended)
+docker compose up -d
+
+# Or build and run directly with Docker
+docker build -t medication-inventory .
+docker run -d -p 8081:80 --name medication-inventory medication-inventory
+```
+
+Access the application in your browser at `http://localhost:8081`.
+
+To stop the container:
+```bash
+docker compose down
+```
 
 ---
 

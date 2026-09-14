@@ -55,3 +55,38 @@ jobs:
 
       - name: Run Playwright E2E
         run: npm run test:e2e
+
+      - name: Build and start Docker container
+        run: docker compose up -d --build
+
+      - name: Verify Docker container health and HTTP endpoint
+        run: |
+          echo "Waiting for container to become healthy..."
+          timeout=60
+          while [ $timeout -gt 0 ]; do
+            status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' medication-inventory 2>/dev/null || echo "starting")
+            echo "Health status: $status ($timeout seconds remaining)"
+            if [ "$status" = "healthy" ]; then
+              break
+            fi
+            sleep 2
+            timeout=$((timeout - 2))
+          done
+
+          if [ "$status" != "healthy" ]; then
+            echo "Error: container failed to report healthy status within timeout!"
+            docker compose logs
+            exit 1
+          fi
+
+          echo "Testing root HTTP endpoint on port 8081..."
+          curl --fail -sS http://localhost:8081/ > /dev/null || {
+            echo "Error: HTTP smoke test failed!"
+            docker compose logs
+            exit 1
+          }
+          echo "HTTP endpoint responded with 200 OK!"
+
+      - name: Clean up Docker containers
+        if: always()
+        run: docker compose down -v
