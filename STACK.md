@@ -29,6 +29,7 @@ The project must provide a responsive inventory dashboard with deterministic med
 | E2E Testing | Playwright & `@playwright/test` `1.63.0`                                      | End-to-end browser automation (Chromium)                |
 | Quality     | ESLint `10.10.0` / `@eslint/js` `10.0.1`, Prettier `3.9.6`                    | Static checks and formatting                            |
 | Hosting     | Cloudflare static assets via `wrangler.jsonc`                                 | Production delivery                                     |
+| Container   | Docker `node:22-alpine` + `nginx:alpine`                                       | Multi-stage containerization & local orchestration      |
 | CI/CD       | GitHub Actions (Node.js 22.x)                                                 | Automated verification pipeline                         |
 
 ## 3. Runtime and packages
@@ -46,6 +47,8 @@ Browser `localStorage` is the only persistence boundary. Stored JSON is untruste
 ## 6. Hosting and delivery
 
 `vite build` emits `dist`; `wrangler.jsonc` points static asset delivery at that directory. The known public demo is `https://inventory.leonemarcos.com/`. Production crawler files are emitted from `public/`: `robots.txt`, `sitemap.xml`, `llms.txt`, and `_headers`. The repository does not deploy from CI in this checkout; deployment ownership remains the configured Cloudflare project.
+
+For containerized deployment, a multi-stage `Dockerfile` (`node:22-alpine` builder and `nginx:alpine` runtime) serves the production bundle with a hardened `nginx.conf` (SPA fallback and asset caching). Orchestration is provided via `compose.yaml` (port 8081).
 
 ## 7. Testing and quality
 
@@ -69,6 +72,7 @@ Reuse the current React/Vite/Tailwind stack before adding dependencies. Do not a
 | ---------- | ----------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
 | 2026-09-04 | Keep local browser persistence instead of adding a backend. | API, database, Supabase | No multi-user or server requirement exists for this portfolio demo. | Smaller deployment and explicit local-data boundary. |
 | 2026-09-04 | Validate stored records before rendering.                   | Trust parsed JSON       | Browser storage can be stale, manually edited, or corrupt.          | Prevents malformed data from crashing the dashboard. |
+| 2026-09-14 | Introduce multi-stage Docker & Nginx containerization.      | Bare Node server, PM2   | Enables reproducible deployment, containerized preview, and orchestration without Node.js runtime overhead in production. | Clean immutable artifact, hardened HTTP/SPA headers, zero-dependency hosting. |
 
 ## 12. Stack conformance audit
 

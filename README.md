@@ -157,6 +157,28 @@ Open the local server URL printed by Vite (typically `http://localhost:5173`).
 
 ---
 
+### Running with Docker
+
+You can build and run the application in an isolated, production-grade Nginx container:
+
+```bash
+# Using Docker Compose (Recommended)
+docker compose up -d
+
+# Or build and run directly with Docker
+docker build -t medication-inventory .
+docker run -d -p 8081:80 --name medication-inventory medication-inventory
+```
+
+Access the application in your browser at `http://localhost:8081`.
+
+To stop the container:
+```bash
+docker compose down
+```
+
+---
+
 ## Testing & Quality Assurance
 
 Run the automated test suite, type-checking, and lint checks:
