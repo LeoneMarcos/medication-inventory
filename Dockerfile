@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Production runtime stage
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 
 # Clean default nginx static files
 RUN rm -rf /usr/share/nginx/html/*
@@ -24,7 +24,7 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx configuration for SPA routing and security headers
+# Copy custom nginx configuration for SPA routing and baseline security headers
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose HTTP port

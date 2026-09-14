@@ -159,7 +159,7 @@ Open the local server URL printed by Vite (typically `http://localhost:5173`).
 
 ### Running with Docker
 
-You can build and run the application in an isolated, production-grade Nginx container:
+As an optional reproducible local preview and container packaging path (canonical production deployment remains Cloudflare static delivery), you can run the application in an isolated, production-oriented Nginx container with baseline security headers:
 
 ```bash
 # Using Docker Compose (Recommended)

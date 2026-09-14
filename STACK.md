@@ -29,7 +29,7 @@ The project must provide a responsive inventory dashboard with deterministic med
 | E2E Testing | Playwright & `@playwright/test` `1.63.0`                                      | End-to-end browser automation (Chromium)                |
 | Quality     | ESLint `10.10.0` / `@eslint/js` `10.0.1`, Prettier `3.9.6`                    | Static checks and formatting                            |
 | Hosting     | Cloudflare static assets via `wrangler.jsonc`                                 | Production delivery                                     |
-| Container   | Docker `node:22-alpine` + `nginx:alpine`                                       | Multi-stage containerization & local orchestration      |
+| Container   | Docker `node:22-alpine` + `nginx:1.27-alpine`                                 | Optional reproducible container preview & packaging     |
 | CI/CD       | GitHub Actions (Node.js 22.x)                                                 | Automated verification pipeline                         |
 
 ## 3. Runtime and packages
@@ -48,7 +48,7 @@ Browser `localStorage` is the only persistence boundary. Stored JSON is untruste
 
 `vite build` emits `dist`; `wrangler.jsonc` points static asset delivery at that directory. The known public demo is `https://inventory.leonemarcos.com/`. Production crawler files are emitted from `public/`: `robots.txt`, `sitemap.xml`, `llms.txt`, and `_headers`. The repository does not deploy from CI in this checkout; deployment ownership remains the configured Cloudflare project.
 
-For containerized deployment, a multi-stage `Dockerfile` (`node:22-alpine` builder and `nginx:alpine` runtime) serves the production bundle with a hardened `nginx.conf` (SPA fallback and asset caching). Orchestration is provided via `compose.yaml` (port 8081).
+For optional local container execution and preview, a multi-stage `Dockerfile` (`node:22-alpine` builder and pinned `nginx:1.27-alpine` runtime) serves the production static bundle with a production-oriented `nginx.conf` (SPA fallback, baseline security headers, and asset caching). Orchestration is provided via `compose.yaml` (port 8081). Cloudflare static assets remains the canonical production deployment target.
 
 ## 7. Testing and quality
 
@@ -56,7 +56,7 @@ Required local gates are `npm run format:check`, `npm run lint`, `npm run typech
 
 ## 8. CI/CD
 
-`.github/workflows/ci.yml` runs on pushes and pull requests targeting `main`, uses Node.js 22.x, runs `npm ci`, production dependency audit (`npm audit --omit=dev --audit-level=high`), `npm run format:check`, `npm run lint`, `npm run typecheck` (`tsc -b`), `npm test`, `npm run build`, Playwright Chromium installation (`npx playwright install --with-deps chromium`), and `npm run test:e2e`. It does not force-push or deploy.
+`.github/workflows/ci.yml` runs on pushes and pull requests targeting `main`, uses Node.js 22.x, runs `npm ci`, production dependency audit (`npm audit --omit=dev --audit-level=high`), `npm run format:check`, `npm run lint`, `npm run typecheck` (`tsc -b`), `npm test`, `npm run build`, Playwright Chromium installation (`npx playwright install --with-deps chromium`), Playwright E2E (`npm run test:e2e`), and validates the Docker build, healthcheck, and HTTP endpoint with an always-run cleanup. It does not force-push or deploy.
 
 ## 9. Performance
 
@@ -72,7 +72,7 @@ Reuse the current React/Vite/Tailwind stack before adding dependencies. Do not a
 | ---------- | ----------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
 | 2026-09-04 | Keep local browser persistence instead of adding a backend. | API, database, Supabase | No multi-user or server requirement exists for this portfolio demo. | Smaller deployment and explicit local-data boundary. |
 | 2026-09-04 | Validate stored records before rendering.                   | Trust parsed JSON       | Browser storage can be stale, manually edited, or corrupt.          | Prevents malformed data from crashing the dashboard. |
-| 2026-09-14 | Introduce multi-stage Docker & Nginx containerization.      | Bare Node server, PM2   | Enables reproducible deployment, containerized preview, and orchestration without Node.js runtime overhead in production. | Clean immutable artifact, hardened HTTP/SPA headers, zero-dependency hosting. |
+| 2026-09-14 | Provide optional multi-stage Docker & Nginx container packaging. | Bare Node server, PM2   | Enables reproducible local preview and packaging with baseline security headers, without altering Cloudflare as the canonical static host. | Minimal immutable artifact, SPA fallback, zero runtime Node overhead. |
 
 ## 12. Stack conformance audit
 
